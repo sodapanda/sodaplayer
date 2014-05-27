@@ -27,3 +27,6 @@ proguard/
 #eclipse
 .classpath
 .settings
+
+#ndk
+obj/
