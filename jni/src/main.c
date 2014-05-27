@@ -42,12 +42,10 @@ int stop=0;
 int timeout_flag =0;
 int disable_video=0;
 
+JavaVM *gJavaVm;
+jobject gJavaobj;
 VideoState *vs;
-JNIEnv* jenv;
-jobject jobj;
-jbyteArray aarray;
-jmethodID play;
-//jmethodID togglePd;
+jbyteArray global_aarray;
 jmethodID initAdudioTrack;
 jmethodID onNativeConnected;
 jmethodID onNativeDisConnected;
@@ -99,12 +97,6 @@ jobject createBitmap(JNIEnv *pEnv, int pWidth, int pHeight) {
 	//create the bitmap
 	return (*pEnv)->CallStaticObjectMethod(pEnv, javaBitmapClass, mid, pWidth, pHeight, javaBitmapConfig);
 }
-
-//开启和关闭“加载视频”对话框
-//int javaTogglePd(){
-//	(*jenv)->CallVoidMethod(jenv,jobj,togglePd);
-//	return 0;
-//}
 
 //当Android系统中对应播放窗口的Surfaceview创建的时候，在native层得到这个surface的引用地址
 int Java_info_sodapanda_sodaplayer_MainActivity_setupsurface(JNIEnv* env,jobject thiz,jobject pSurface,int pwidth,int pheight){
@@ -258,14 +250,20 @@ void *video_thread(void* arg){
 
 //音频线程
 void *audio_thread(void* arg){
-	fprintf(stderr,"音频线程开始\n");
+	LOGE("音频线程开启\n");
+
+	JNIEnv *audioEnv;
+	(*gJavaVm)->AttachCurrentThread(gJavaVm,&audioEnv,NULL);
+	jclass javacls = (*audioEnv)->GetObjectClass(audioEnv,gJavaobj);
+	jmethodID play = (*audioEnv)->GetMethodID(audioEnv,javacls,"playSound","([BI)V");
+
 	struct timespec *time = malloc(sizeof(struct timespec));
 	time->tv_sec=4;//网络不好最多等4秒
 	time->tv_nsec=0;
 
 	while(1){
 		if(stop){
-			return 0;
+			break;
 		}
 		struct threadmsg *msg = malloc(sizeof(struct threadmsg));
 		msg->data=NULL;
@@ -274,7 +272,6 @@ void *audio_thread(void* arg){
 		thread_queue_get(audio_queue,time,msg);
 
 		if(msg->msgtype==-1){//正常退出
-			LOGE("音频线程正常退出\n");
 			break;
 		}
 
@@ -291,7 +288,6 @@ void *audio_thread(void* arg){
 			continue;
 		}
 
-//		LOGE("音频PTS = %d\nDTS = %d",packet_p->pts,packet_p->dts);
 
 		vs->now_audio_dts = packet_p->dts;
 		int len =0;
@@ -310,20 +306,23 @@ void *audio_thread(void* arg){
 			pavpacket.data += len;
 
 			if(got_frame){
-				jbyte *bytes = (*jenv)->GetByteArrayElements(jenv, aarray, NULL);
+				jbyte *bytes = (*audioEnv)->GetByteArrayElements(audioEnv, global_aarray, NULL);
 				memcpy(bytes,*(vs->dst_data),dst_linesize);
-				(*jenv)->ReleaseByteArrayElements(jenv, aarray, bytes, 0);
-				(*jenv)->CallVoidMethod(jenv,jobj,play,aarray,dst_linesize);
+				(*audioEnv)->ReleaseByteArrayElements(audioEnv, global_aarray, bytes, 0);
+				(*audioEnv)->CallVoidMethod(audioEnv,gJavaobj,play,global_aarray,dst_linesize);
 			}
 		}
 		av_free_packet(&pavpacket);
 		free(msg->data);
 		free(msg);
 	}
-
+	(*gJavaVm)->DetachCurrentThread(gJavaVm);
 	free(time);
+	LOGE("音频线程退出\n");
 	return NULL;
 }
+
+
 
 //启动播放器
 int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj,jstring file){
@@ -343,16 +342,17 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
 	jboolean isfilenameCopy;
 	const char *filename = (*env)-> GetStringUTFChars(env, file, &isfilenameCopy);
 	jclass cls = (*env)->GetObjectClass(env,obj);
-	play = (*env)->GetMethodID(env,cls,"playSound","([BI)V");
-//	togglePd = (*env)->GetMethodID(env,cls,"togglePd","()V");
 	initAdudioTrack = (*env)->GetMethodID(env,cls,"initAdudioTrack","(I)[B");
 	onNativeConnected = (*env)->GetMethodID(env,cls,"onNativeConnected","()V");
+	if(onNativeConnected==NULL){
+		LOGE("onNativeConnected获取methodid失败\n");
+		return -1;
+	}
 	onNativeDisConnected = (*env)->GetMethodID(env,cls,"onNativeDisConnected","()V");
 	onNativeFinish = (*env)->GetMethodID(env,cls,"onNativeFinish","()V");
 
-	jenv=env;
-	jobj = obj;
-//	aarray = array;
+	(*env)->GetJavaVM(env,&gJavaVm);
+	gJavaobj = (*env)->NewGlobalRef(env,obj);
 
 	//video
 	AVFormatContext *pFormatCtx =NULL;
@@ -388,6 +388,9 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
 		fprintf(stderr,"无法打开文件\n");
 		return -1; // 无法打开视频文件
 	}
+	if(stop){
+		return 0;
+	}
 
 	// 检索视频信息
 	if(avformat_find_stream_info(pFormatCtx, NULL)<0){
@@ -414,7 +417,8 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
 			if(vs->sample_rate_src <=0){
 				return -1;
 			}
-			aarray = (jbyteArray)((*env)->CallObjectMethod(env,obj,initAdudioTrack,vs->sample_rate_src));
+			jbyteArray aarray = (jbyteArray)((*env)->CallObjectMethod(env,obj,initAdudioTrack,vs->sample_rate_src));
+			global_aarray = (*env)->NewGlobalRef(env,aarray);
 			LOGE("initAdudioTrack返回\n");
 		}
 	}
@@ -481,7 +485,6 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
 	uint8_t **dst_data =NULL;
 	int dst_linesize=0;
 
-	//开始读取线程
 	vs->RGBAFrame=RGBAFrame;
 	vs->buffer=buffer;
 	vs->pCodecCtx=pCodecCtx;
@@ -495,9 +498,6 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
 	vs->dst_data=dst_data;
 	vs->swr_ctx=swr_ctx;
 
-//	//开始读取线程
-//	pthread_t rtid;
-//	pthread_create(&rtid,NULL,getPacket,env);
 	//视频线程
 	pthread_t video_tid;
 	pthread_create(&video_tid,NULL,video_thread,NULL);
@@ -507,7 +507,6 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
 	pthread_create(&audio_tid,NULL,audio_thread,NULL);
 
 	//通知android界面dissmiss等待progress dialog
-//	javaTogglePd();
 	(*env)->CallVoidMethod(env,obj,onNativeConnected);
 
 	while(1){
