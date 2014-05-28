@@ -175,7 +175,7 @@ void *video_thread(void* arg){
 
 	while(1){
 		if(stop){
-			return 0;
+			break;
 		}
 		struct threadmsg *msg = malloc(sizeof(struct threadmsg));
 		msg->data=NULL;
@@ -414,39 +414,41 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
 			fprintf(stderr,"audiostream is %d\n",audioStream);
 			vs->sample_rate_src = pFormatCtx->streams[i]->codec->sample_rate;
 			LOGE("采样率是 %d\n",vs->sample_rate_src);
-			if(vs->sample_rate_src <=0){
-				return -1;
+			if(vs->sample_rate_src > 0){
+				jbyteArray aarray = (jbyteArray)((*env)->CallObjectMethod(env,obj,initAdudioTrack,vs->sample_rate_src));
+				global_aarray = (*env)->NewGlobalRef(env,aarray);
+				LOGE("initAdudioTrack返回\n");
 			}
-			jbyteArray aarray = (jbyteArray)((*env)->CallObjectMethod(env,obj,initAdudioTrack,vs->sample_rate_src));
-			global_aarray = (*env)->NewGlobalRef(env,aarray);
-			LOGE("initAdudioTrack返回\n");
+
 		}
 	}
 
 	if(videoStream==-1){
 		fprintf(stderr,"无法找到视频流");
-		return -1; // Didn't find a video stream
 	}
-	if(audioStream==-1){
+	if(audioStream==-1 || vs->sample_rate_src<=0){
 		fprintf(stderr,"无法找到音频流");
-		return -1;
 	}
 
 	//打开音频解码器
-	aCodecCtx = pFormatCtx->streams[audioStream]->codec;
-	aCodec= avcodec_find_decoder(aCodecCtx->codec_id);
+	if(audioStream != -1 && vs->sample_rate_src>0){
+		aCodecCtx = pFormatCtx->streams[audioStream]->codec;
+		aCodec= avcodec_find_decoder(aCodecCtx->codec_id);
 
-	if(avcodec_open2(aCodecCtx,aCodec,&audioOptionsDict)<0){
-		fprintf(stderr,"无法打开解码器");
-		return -1;
+		if(avcodec_open2(aCodecCtx,aCodec,&audioOptionsDict)<0){
+			fprintf(stderr,"无法打开解码器");
+			return -1;
+		}
 	}
 
 	//打开视频解码器
-	pCodecCtx=pFormatCtx->streams[videoStream]->codec;
-	pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
-	if(avcodec_open2(pCodecCtx,pCodec,&videoOptionsDict)<0){
-		fprintf(stderr,"无法打开视频解码器\n");
-		return -1;
+	if(videoStream != -1){
+		pCodecCtx=pFormatCtx->streams[videoStream]->codec;
+		pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+		if(avcodec_open2(pCodecCtx,pCodec,&videoOptionsDict)<0){
+			fprintf(stderr,"无法打开视频解码器\n");
+			return -1;
+		}
 	}
 	pFrame = avcodec_alloc_frame();
 
@@ -500,11 +502,15 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
 
 	//视频线程
 	pthread_t video_tid;
-	pthread_create(&video_tid,NULL,video_thread,NULL);
+	if(videoStream!=-1){
+		pthread_create(&video_tid,NULL,video_thread,NULL);
+	}
 
 	//音频线程
 	pthread_t audio_tid;
-	pthread_create(&audio_tid,NULL,audio_thread,NULL);
+	if(audioStream!=-1 && vs->sample_rate_src >0){
+		pthread_create(&audio_tid,NULL,audio_thread,NULL);
+	}
 
 	//通知android界面dissmiss等待progress dialog
 	(*env)->CallVoidMethod(env,obj,onNativeConnected);
