@@ -126,7 +126,7 @@ void *getPacket(void* arg){
 //	usleep(500000);//缓存一点数据
 	fprintf(stderr,"getpacket线程开始\n");
 	struct timespec *time = malloc(sizeof(struct timespec));
-	time->tv_sec=5;//网络不好最多等3秒
+	time->tv_sec=10;//网络不好最多等10秒
 	time->tv_nsec=0;
 
 	while(1){
@@ -170,7 +170,7 @@ void *getPacket(void* arg){
 void *video_thread(void* arg){
 	fprintf(stderr,"视频线程开始\n");
 	struct timespec *time = malloc(sizeof(struct timespec));
-	time->tv_sec=4;//网络不好最多等4秒
+	time->tv_sec=10;//网络不好最多等10秒
 	time->tv_nsec=0;
 
 	while(1){
@@ -258,7 +258,7 @@ void *audio_thread(void* arg){
 	jmethodID play = (*audioEnv)->GetMethodID(audioEnv,javacls,"playSound","([BI)V");
 
 	struct timespec *time = malloc(sizeof(struct timespec));
-	time->tv_sec=4;//网络不好最多等4秒
+	time->tv_sec=10;//网络不好最多等10秒
 	time->tv_nsec=0;
 
 	while(1){
