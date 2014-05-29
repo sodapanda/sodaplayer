@@ -385,6 +385,9 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
 
 	//打开视频文件
 	if(avformat_open_input(&pFormatCtx,filename, NULL, NULL)!=0){
+		if(stop){
+			return 0;
+		}
 		fprintf(stderr,"无法打开文件\n");
 		return -1; // 无法打开视频文件
 	}
