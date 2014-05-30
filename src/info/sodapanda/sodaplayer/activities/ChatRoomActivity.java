@@ -98,7 +98,7 @@ import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 import com.viewpagerindicator.TabPageIndicator;
 
-public class ChatRoomActivity extends MainActivity {
+public abstract class ChatRoomActivity extends MainActivity {
 	// TODO UI动画效果
 	// TODO 暂停按钮
 	// TODO 直播时间和预告时间
@@ -540,7 +540,7 @@ public class ChatRoomActivity extends MainActivity {
             v.getViewTreeObserver().removeGlobalOnLayoutListener(listener);
         } else {
         	//TODO 直播间removeOnGlobalLayoutListener的APIlevel问题
-//            v.getViewTreeObserver().removeOnGlobalLayoutListener(listener);
+            v.getViewTreeObserver().removeOnGlobalLayoutListener(listener);
         }
     }
 
@@ -1680,12 +1680,7 @@ public class ChatRoomActivity extends MainActivity {
 	}
 
 	// 跳转到登录界面
-	public void jumpToLog() {
-		//TODO 跳转到登陆界面
-//		Intent intent = new Intent(ChatRoomActivity.this, LoginActivity.class);
-//		intent.putExtra(LoginHelper.LOG_TYPE, LoginHelper.CHATROOM_LOGIN);
-//		startActivity(intent);
-	}
+	 public abstract void jumpToLog();
 
 	public void jumpToPay() {
 		//TODO 跳转到支付界面
