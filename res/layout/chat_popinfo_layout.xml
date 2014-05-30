@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="bottom" >
+
+    <RelativeLayout
+        android:id="@+id/star_info_layout"
+        android:layout_width="match_parent"
+        android:layout_height="85dp"
+        android:background="@color/qc_room_chatbar_grey" >
+
+        <ImageView
+            android:id="@+id/star_avatar"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:scaleType="centerCrop" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="15dp"
+            android:layout_toRightOf="@id/star_avatar" >
+
+            <TextView
+                android:id="@+id/star_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="主播主播"
+                android:textColor="@color/qc_room_font_light_grey"
+                android:textSize="17sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/star_name"
+                android:layout_below="@id/star_name"
+                android:layout_marginTop="7dp"
+                android:gravity="bottom"
+                android:orientation="horizontal" >
+
+                <RelativeLayout
+                    android:id="@+id/star_touxian"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:background="@drawable/pink_btn_bg"
+                    android:paddingLeft="3dp"
+                    android:paddingRight="3dp"
+                    android:visibility="visible" >
+
+                    <TextView
+                        android:id="@+id/star_touxian_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginTop="1dp"
+                        android:text="艺人"
+                        android:textColor="@color/qc_room_white"
+                        android:textSize="12sp" />
+                </RelativeLayout>
+
+                <ImageView
+                    android:id="@+id/star_lv_icon"
+                    android:layout_width="22dp"
+                    android:layout_height="13dp"
+                    android:scaleType="centerCrop" />
+
+                <TextView
+                    android:id="@+id/user_id"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="5dp"
+                    android:text="168000"
+                    android:textColor="@color/qc_room_white"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="22dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="15dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/right_arrow_white" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/show_info_layout"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_below="@id/star_info_layout"
+        android:background="@color/qc_room_background" >
+
+        <RelativeLayout
+            android:id="@+id/show_time_layout"
+            android:layout_width="match_parent"
+            android:layout_height="60dp" >
+
+            <TextView
+                android:id="@+id/show_time_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="15dp"
+                android:text="已播出15分钟"
+                android:textColor="@color/qc_room_black_font"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/all_time_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="15dp"
+                android:text="时长：80分钟"
+                android:textColor="@color/qc_room_black_font"
+                android:textSize="15sp"
+                android:visibility="gone" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_alignParentBottom="true"
+                android:background="@color/qc_room_font_light_grey" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_below="@id/show_time_layout" >
+
+            <TextView
+                android:id="@+id/show_description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="15dp"
+                android:text="本场演出说明文字"
+                android:textColor="@color/qc_room_black_font"
+                android:textSize="15sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_alignParentBottom="true"
+                android:background="@color/qc_room_font_light_grey" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+</RelativeLayout>

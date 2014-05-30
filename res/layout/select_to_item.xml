@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/qc_select_to_width"
+    android:layout_height="wrap_content" >
+
+    <TextView
+        android:id="@+id/to_nickname"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:maxLines="1"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:textColor="@color/qc_room_chatbar_grey"
+        android:textSize="@dimen/qc_select_to_font_size" />
+
+</RelativeLayout>

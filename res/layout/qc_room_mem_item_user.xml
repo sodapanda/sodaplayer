@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/avatar_layout"
+        android:layout_width="50.0dip"
+        android:layout_height="50.0dip"
+        android:layout_marginLeft="4.0dip"
+        android:gravity="center" >
+
+        <ImageView
+            android:id="@+id/avatar"
+            android:layout_width="40.0dip"
+            android:layout_height="40.0dip"
+            android:layout_margin="10.0dip"
+            android:clickable="false"
+            android:focusable="false"
+            android:scaleType="centerCrop" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/capacity_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/name"
+        android:layout_alignTop="@id/name"
+        android:layout_marginLeft="3.0dp"
+        android:layout_toRightOf="@id/avatar_layout"
+        android:scaleType="centerInside"
+        android:src="@drawable/zhubo"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/vip_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/name"
+        android:layout_alignTop="@id/name"
+        android:layout_marginLeft="3.0dp"
+        android:layout_toRightOf="@id/capacity_icon"
+        android:scaleType="centerInside"
+        android:src="@drawable/vip1"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="3.0dp"
+        android:layout_marginTop="6.0dip"
+        android:layout_toRightOf="@id/vip_icon"
+        android:clickable="false"
+        android:ellipsize="end"
+        android:focusable="false"
+        android:maxWidth="150.0dip"
+        android:singleLine="true"
+        android:text="name"
+        android:textColor="@color/qc_room_black_font"
+        android:textSize="14.0sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/a_lv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/avatar_layout"
+        android:layout_below="@id/name"
+        android:layout_marginBottom="5.0dip"
+        android:layout_marginTop="2.0dip"
+        android:layout_toRightOf="@id/avatar_layout"
+        android:focusable="false"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:id="@+id/r_lv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/avatar_layout"
+        android:layout_marginBottom="5.0dip"
+        android:layout_marginLeft="2.0dip"
+        android:layout_toRightOf="@id/a_lv"
+        android:focusable="false" />
+
+    <TextView
+        android:id="@+id/userid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/r_lv"
+        android:layout_marginLeft="6.0dip"
+        android:layout_toRightOf="@id/r_lv"
+        android:clickable="false"
+        android:focusable="false"
+        android:singleLine="true"
+        android:text="id:123456"
+        android:textColor="#ffa4a4a4"
+        android:textSize="11.0sp" />
+
+    <ImageView
+        android:id="@+id/arrow_icon"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="10.0dip"
+        android:layout_marginTop="15.0dip"
+        android:clickable="false"
+        android:duplicateParentState="false"
+        android:focusable="false"
+        android:scaleType="centerInside"
+        android:src="@drawable/audience_list_arrow_down" />
+
+    <LinearLayout
+        android:id="@+id/mem_action_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/avatar_layout"
+        android:layout_marginTop="7.0dip"
+        android:layout_weight="1.0"
+        android:background="@color/qc_room_background"
+        android:orientation="vertical"
+        android:visibility="visible" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="6.0dip"
+            android:layout_marginRight="6.0dip"
+            android:layout_marginTop="6.0dip"
+            android:gravity="center_vertical" >
+
+            <LinearLayout
+                android:id="@+id/user_info"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.0"
+                android:clickable="true"
+                android:gravity="center_horizontal"
+                android:orientation="vertical" >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/qc_room_mem_info_icon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TA的主页"
+                    android:textColor="#ff696969"
+                    android:textSize="12.0sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/gift_view"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.0"
+                android:clickable="true"
+                android:gravity="center_horizontal"
+                android:orientation="vertical" >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/qc_room_mem_gift_icon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="送TA礼物"
+                    android:textColor="#ff696969"
+                    android:textSize="12.0sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/chat_view"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.0"
+                android:clickable="true"
+                android:gravity="center_horizontal"
+                android:orientation="vertical" >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/qc_room_mem_chat_icon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="与TA聊天"
+                    android:textColor="#ff696969"
+                    android:textSize="12.0sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/kickout_view"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.0"
+                android:clickable="true"
+                android:gravity="center_horizontal"
+                android:orientation="vertical" >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/qc_room_mem_kickout_icon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="踢出房间"
+                    android:textColor="#ff696969"
+                    android:textSize="12.0sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="6.0dip"
+            android:gravity="center_vertical" >
+
+            <LinearLayout
+                android:id="@+id/shutup_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:gravity="center_horizontal"
+                android:orientation="vertical" >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/qc_room_mem_shutup_icon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="禁言"
+                    android:textColor="#ff696969"
+                    android:textSize="12.0sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="invisible" >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/qc_room_mem_shutup_icon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="禁言"
+                    android:textColor="#ff696969"
+                    android:textSize="12.0sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="invisible" >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/qc_room_mem_shutup_icon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="禁言"
+                    android:textColor="#ff696969"
+                    android:textSize="12.0sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="invisible" >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/qc_room_mem_shutup_icon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="禁言"
+                    android:textColor="#ff696969"
+                    android:textSize="12.0sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_below="@id/mem_action_layout"
+        android:background="@color/qc_room_background" />
+
+</RelativeLayout>
