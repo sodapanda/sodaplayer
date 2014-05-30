@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:background="@drawable/nav_bg" >
+
+    <Button
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentLeft="true"
+        android:background="@drawable/btn_left_bg"
+        android:onClick="onBack" />
+
+    <TextView
+        android:id="@+id/title_bar_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="全部直播"
+        android:textColor="@color/qc_room_white"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/pay_next_step"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/click_bg"
+        android:gravity="center"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:text="下一步"
+        android:textColor="@color/qc_room_white"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
+</RelativeLayout>

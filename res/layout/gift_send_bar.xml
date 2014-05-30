@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:background="@color/qc_room_chatbar_grey" >
+
+    <RelativeLayout
+        android:id="@+id/gift_bar_money"
+        android:layout_width="60dp"
+        android:layout_height="32dp"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="10dp"
+        android:background="@drawable/pink_btn_bg"
+        android:clickable="true"
+        android:focusable="true" >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/btn_white_shap"
+            android:padding="1dp" >
+
+            <ImageView
+                android:id="@+id/gift_bar_dolla"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_centerVertical="true"
+                android:background="@drawable/chat_bar_money_icon" />
+
+            <TextView
+                android:id="@+id/giftbar_money"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@id/gift_bar_dolla"
+                android:singleLine="true"
+                android:text="89898"
+                android:textColor="#ff983300"
+                android:textSize="10sp" />
+        </RelativeLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:text="充值"
+            android:textColor="@color/qc_room_white"
+            android:textSize="13sp" />
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/giftbar_send_btn"
+        android:layout_width="50dp"
+        android:layout_height="32dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/pink_btn_bg"
+        android:text="赠送"
+        android:textColor="@color/qc_room_white" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_toLeftOf="@id/giftbar_send_btn"
+        android:layout_toRightOf="@id/gift_bar_money"
+        android:baselineAligned="false" >
+
+        <RelativeLayout
+            android:id="@+id/giftbar_sendto"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/chatbar_to_bg" >
+
+            <TextView
+                android:id="@+id/gift_to_nick_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="3dp"
+                android:singleLine="true"
+                android:text="送给"
+                android:textColor="@color/qc_room_black_font"
+                android:textSize="13sp" />
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="5dp"
+                android:src="@drawable/chatbar_arrow" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/giftbar_count"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/chatbar_to_bg" >
+
+            <TextView
+                android:id="@+id/gift_count_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="3dp"
+                android:singleLine="true"
+                android:text="个数"
+                android:textColor="@color/qc_room_black_font"
+                android:textSize="13sp" />
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="5dp"
+                android:src="@drawable/chatbar_arrow" />
+        </RelativeLayout>
+    </LinearLayout>
+
+</RelativeLayout>

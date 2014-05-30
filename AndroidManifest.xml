@@ -7,7 +7,8 @@
     <uses-sdk
         android:minSdkVersion="9"
         android:targetSdkVersion="19" />
-    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -22,6 +23,18 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="info.sodapanda.sodaplayer.activities.ChatRoomActivity"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name="info.sodapanda.sodaplayer.activities.RoomRankListActivity"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name="info.sodapanda.sodaplayer.activities.SongActivity"
+            android:screenOrientation="portrait" >
         </activity>
     </application>
 
