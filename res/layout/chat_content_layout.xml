@@ -11,7 +11,7 @@
         android:layout_height="match_parent"
         android:scrollbars="none" >
 
-        <tv.qicheng.x.views.PubChatContentView
+        <info.sodapanda.sodaplayer.views.PubChatContentView
             android:id="@+id/pub_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -25,7 +25,7 @@
         android:background="@color/qc_prichat_grey"
         android:scrollbars="none" >
 
-        <tv.qicheng.x.views.PrivateChatContentView
+        <info.sodapanda.sodaplayer.views.PrivateChatContentView
             android:id="@+id/pri_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

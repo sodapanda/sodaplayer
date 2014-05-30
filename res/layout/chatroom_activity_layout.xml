@@ -75,7 +75,7 @@
         android:orientation="vertical"
         android:visibility="gone" >
 
-        <tv.qicheng.x.views.TopMarqueeLayout
+        <info.sodapanda.sodaplayer.views.TopMarqueeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="invisible" />
