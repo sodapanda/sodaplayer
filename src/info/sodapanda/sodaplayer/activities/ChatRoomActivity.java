@@ -1,11 +1,10 @@
 package info.sodapanda.sodaplayer.activities;
 
-import info.sodapanda.sodaplayer.MainActivity;
+import info.sodapanda.sodaplayer.FFmpegVideoView;
 import info.sodapanda.sodaplayer.R;
 import info.sodapanda.sodaplayer.Status;
 import info.sodapanda.sodaplayer.events.AddPrivateItemEvent;
 import info.sodapanda.sodaplayer.events.BeForbidEvent;
-import info.sodapanda.sodaplayer.events.ChangeMoneyEvent;
 import info.sodapanda.sodaplayer.events.ChatClkEvent;
 import info.sodapanda.sodaplayer.events.MenuClked;
 import info.sodapanda.sodaplayer.events.MuchGiftEvent;
@@ -27,7 +26,6 @@ import info.sodapanda.sodaplayer.socket.Client;
 import info.sodapanda.sodaplayer.socket.ClientFactory;
 import info.sodapanda.sodaplayer.socket.ServerInfo;
 import info.sodapanda.sodaplayer.socket.out.PubNoDChatMessage;
-import info.sodapanda.sodaplayer.utils.RoomLvToResId;
 import info.sodapanda.sodaplayer.utils.SmileyParser;
 import info.sodapanda.sodaplayer.views.GiftAnimSurfaceView;
 import info.sodapanda.sodaplayer.views.RoomMenuView;
@@ -37,10 +35,8 @@ import info.sodapanda.sodaplayer.views.data.PointsInfo;
 import java.util.ArrayList;
 
 import org.apache.http.Header;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -52,6 +48,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -98,7 +95,7 @@ import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 import com.viewpagerindicator.TabPageIndicator;
 
-public abstract class ChatRoomActivity extends MainActivity {
+public abstract class ChatRoomActivity extends FragmentActivity{
 	// TODO UI动画效果
 	// TODO 暂停按钮
 	// TODO 直播时间和预告时间
@@ -148,6 +145,9 @@ public abstract class ChatRoomActivity extends MainActivity {
     View activityRootView;
     
     private Handler handler = new Handler();
+    
+    //FFMPEGVideoView
+    private FFmpegVideoView playerview;
 
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -205,7 +205,7 @@ public abstract class ChatRoomActivity extends MainActivity {
 		super.onDestroy();
 		cutDown();
 		bus.unregister(this);
-		stop();
+		playerview.stop();
 		Status.clearData();
 	}
 
@@ -372,15 +372,15 @@ public abstract class ChatRoomActivity extends MainActivity {
 	 * 设置播放界面
 	 */
 	private void setVideoSurface() {
-		FrameLayout video_holder = (FrameLayout) findViewById(R.id.video_holder);
-		video_holder.addView(player_surface);
-
-		noshow_pic_holder = (FrameLayout) findViewById(R.id.noshow_pic_holder);
-
 		Display display = getWindowManager().getDefaultDisplay();
 		screen_width = display.getWidth();
 		screen_height = display.getHeight();
-
+		FrameLayout video_holder = (FrameLayout) findViewById(R.id.video_holder);
+		playerview = new FFmpegVideoView(this);
+		playerview.setLayoutParams(new LayoutParams(screen_width, (int) (screen_width * 0.75)));
+		video_holder.addView(playerview);
+		
+		noshow_pic_holder = (FrameLayout) findViewById(R.id.noshow_pic_holder);
 		no_show_pic = new ImageView(this);
 		no_show_pic.setLayoutParams(new LayoutParams(screen_width, (int) (screen_width * 0.75)));
 		no_show_pic.setScaleType(ScaleType.CENTER_CROP);
@@ -535,7 +535,8 @@ public abstract class ChatRoomActivity extends MainActivity {
             }
         }
     };
-    private void removeOnGlobalLayoutListener(View v, ViewTreeObserver.OnGlobalLayoutListener listener){
+    @SuppressLint("NewApi")
+	private void removeOnGlobalLayoutListener(View v, ViewTreeObserver.OnGlobalLayoutListener listener){
         if (Build.VERSION.SDK_INT < 16) {
             v.getViewTreeObserver().removeGlobalOnLayoutListener(listener);
         } else {
@@ -545,7 +546,7 @@ public abstract class ChatRoomActivity extends MainActivity {
     }
 
 	public void onClickFinish(View v) {
-		stop();
+		playerview.stop();
 		finish();
 	}
 
@@ -1337,7 +1338,7 @@ public abstract class ChatRoomActivity extends MainActivity {
 
 		no_show_pic.setVisibility(View.INVISIBLE);
 		ArrayList<String> rtmpUrl = Status.getRoomInfo().getRtmpRrlList();
-		startPlayer(rtmpUrl);
+		playerview.startPlayer(rtmpUrl);
 	}
 
 	/**
@@ -1353,7 +1354,7 @@ public abstract class ChatRoomActivity extends MainActivity {
 			no_show_pic.setVisibility(View.VISIBLE);
 		}
 
-		stop();
+		playerview.stop();
 	}
 
 	/**
@@ -1385,7 +1386,7 @@ public abstract class ChatRoomActivity extends MainActivity {
 	@Subscribe
 	public void onPlayWeiVideo(OnPlayWeiVideo e) {
 		String url = e.getVideoUrl();
-		stop();
+		playerview.stop();
 		weivideo.startVideo(url);
 	}
 
@@ -1419,7 +1420,7 @@ public abstract class ChatRoomActivity extends MainActivity {
 	@Subscribe
 	public void beKicked(BeForbidEvent e) {
 		Toast.makeText(this, "被踢出房间", Toast.LENGTH_LONG).show();
-		stop();
+		playerview.stop();
 		finish();
 	}
 

@@ -30,8 +30,8 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.356284302" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.808831319" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.1500735900" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/home/qishui/devel/tools/ndk/android-ndk-r9d/platforms/android-9/arch-arm/usr/include"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/jni/include}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/qishui/devel/tools/android_ndk/android-ndk-r9d/platforms/android-19/arch-arm/usr/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2068069603" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>

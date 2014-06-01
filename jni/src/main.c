@@ -48,8 +48,6 @@ VideoState *vs;
 jbyteArray global_aarray;
 jmethodID initAdudioTrack;
 jmethodID onNativeConnected;
-jmethodID onNativeDisConnected;
-jmethodID onNativeFinish;
 
 //队列
 struct threadqueue *queue;
@@ -99,7 +97,7 @@ jobject createBitmap(JNIEnv *pEnv, int pWidth, int pHeight) {
 }
 
 //当Android系统中对应播放窗口的Surfaceview创建的时候，在native层得到这个surface的引用地址
-int Java_info_sodapanda_sodaplayer_MainActivity_setupsurface(JNIEnv* env,jobject thiz,jobject pSurface,int pwidth,int pheight){
+int Java_info_sodapanda_sodaplayer_FFmpegVideoView_setupsurface(JNIEnv* env,jobject thiz,jobject pSurface,int pwidth,int pheight){
 	fprintf(stderr,"setupsurface 开始\n");
 	window = ANativeWindow_fromSurface(env,pSurface);
 	if(ANativeWindow_setBuffersGeometry(window,width,height,WINDOW_FORMAT_RGBA_8888)){
@@ -110,20 +108,19 @@ int Java_info_sodapanda_sodaplayer_MainActivity_setupsurface(JNIEnv* env,jobject
 }
 
 //从java层发送停止播放的消息到native层
-int Java_info_sodapanda_sodaplayer_MainActivity_nativestop(JNIEnv* env,jobject thiz){
+int Java_info_sodapanda_sodaplayer_FFmpegVideoView_nativestop(JNIEnv* env,jobject thiz){
 	stop=1;
 	return 0;
 }
 
 //当Android中对应播放窗口的surface被销毁的时候，在native层停止对该窗口的操作
-int Java_info_sodapanda_sodaplayer_MainActivity_nativedisablevidio(JNIEnv* env,jobject thiz){
+int Java_info_sodapanda_sodaplayer_FFmpegVideoView_nativedisablevidio(JNIEnv* env,jobject thiz){
 	disable_video=1;
 	return 0;
 }
 
 //从packet队列中取用的线程
 void *getPacket(void* arg){
-//	usleep(500000);//缓存一点数据
 	fprintf(stderr,"getpacket线程开始\n");
 	struct timespec *time = malloc(sizeof(struct timespec));
 	time->tv_sec=10;//网络不好最多等10秒
@@ -190,7 +187,9 @@ void *video_thread(void* arg){
 
 		if(msg->data ==NULL){
 			LOGE("视频线程超时退出");
-			timeout_flag = 1;
+			if(!stop){
+				timeout_flag = 1;
+			}
 			break;
 		}
 
@@ -198,7 +197,6 @@ void *video_thread(void* arg){
 		pavpacket = *packet_p;
 		int64_t packet_dts = packet_p->dts;
 
-//		LOGE("视频PTS = %d\nDTS = %d",packet_p->pts,packet_p->dts);
 		if(packet_dts<=0){//dts值无效
 			continue;
 		}
@@ -277,7 +275,9 @@ void *audio_thread(void* arg){
 
 		if(msg->data ==NULL){
 			LOGE("音频线程超时退出");
-			timeout_flag = 1;
+			if(!stop){
+				timeout_flag = 1;
+			}
 			break;
 		}
 
@@ -325,7 +325,7 @@ void *audio_thread(void* arg){
 
 
 //启动播放器
-int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj,jstring file){
+int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject obj,jstring file){
 	//初始化队列
 	queue = malloc(sizeof(struct threadqueue));
 	thread_queue_init(queue);
@@ -344,12 +344,6 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
 	jclass cls = (*env)->GetObjectClass(env,obj);
 	initAdudioTrack = (*env)->GetMethodID(env,cls,"initAdudioTrack","(I)[B");
 	onNativeConnected = (*env)->GetMethodID(env,cls,"onNativeConnected","()V");
-	if(onNativeConnected==NULL){
-		LOGE("onNativeConnected获取methodid失败\n");
-		return -1;
-	}
-	onNativeDisConnected = (*env)->GetMethodID(env,cls,"onNativeDisConnected","()V");
-	onNativeFinish = (*env)->GetMethodID(env,cls,"onNativeFinish","()V");
 
 	(*env)->GetJavaVM(env,&gJavaVm);
 	gJavaobj = (*env)->NewGlobalRef(env,obj);
@@ -515,7 +509,7 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
 		pthread_create(&audio_tid,NULL,audio_thread,NULL);
 	}
 
-	//通知android界面dissmiss等待progress dialog
+	//通知android  connected to RTMPserver
 	(*env)->CallVoidMethod(env,obj,onNativeConnected);
 
 	while(1){
@@ -557,6 +551,9 @@ int Java_info_sodapanda_sodaplayer_MainActivity_openfile(JNIEnv* env,jobject obj
     avformat_close_input(&pFormatCtx);
     AndroidBitmap_unlockPixels(env,bitmap);
     LOGE("清理退出\n");
+    if(stop){
+    	return 0;
+    }
     if(timeout_flag){
     	return -1;
     }else{
