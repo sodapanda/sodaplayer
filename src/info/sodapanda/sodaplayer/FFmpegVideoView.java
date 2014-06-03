@@ -20,6 +20,7 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 	
 	AudioTrack audioTrack;
 	private ArrayList<String> rtmpUrlList;
+	private long instance;
 	
 	Thread play_thread;
 	
@@ -28,6 +29,8 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 	
 	public FFmpegVideoView(Context context) {
 		super(context);
+		instance = getPlayInstance();
+		Log.i("soda", "得到一个播放事例 "+instance);
 		
 		this.activity = (Activity) context;
 		initSurfaceView();
@@ -44,12 +47,12 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,int height) {
-		setupsurface(holder.getSurface(), width, height);
+		setupsurface(holder.getSurface(), width, height,instance);
 	}
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
-		nativedisablevidio();
+		nativedisablevidio(instance);
 	}
 	
 	/**
@@ -100,7 +103,7 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 		play_thread = new Thread(new Runnable() {
 			public void run() {
 				is_playing = true;
-				int error=openfile(filename);
+				int error=openfile(filename,instance);
 				is_playing = false;
 				if(error !=0){//打开文件错误
 					activity.runOnUiThread(new Runnable() {
@@ -143,7 +146,7 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 	 * stop play
 	 */
 	public void stop() {
-		nativestop();
+		nativestop(instance);
 		setVisibility(View.INVISIBLE);
 		if (play_thread!=null) {
 			try {
@@ -181,9 +184,10 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 		retry_time++;
 	}
 	
-	public native int openfile(String filename);
-	public native int setupsurface(Surface surface,int width,int height);
-	public native int nativestop();
-	public native int nativedisablevidio();
+	public native int openfile(String filename,long instance);
+	public native int setupsurface(Surface surface,int width,int height,long instance);
+	public native int nativestop(long instance);
+	public native int nativedisablevidio(long instance);
+	public native long getPlayInstance();
 
 }

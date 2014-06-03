@@ -13,6 +13,12 @@
         android:layout_height="wrap_content" >
     </FrameLayout>
 
+    <FrameLayout
+        android:id="@+id/surface_frame2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+    </FrameLayout>
+
     <EditText
         android:id="@+id/filename"
         android:layout_width="match_parent"
