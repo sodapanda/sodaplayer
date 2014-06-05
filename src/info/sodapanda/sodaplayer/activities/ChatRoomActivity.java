@@ -1716,5 +1716,11 @@ public abstract class ChatRoomActivity extends FragmentActivity{
 		disconn_text.setVisibility(View.VISIBLE);
 		stopPlay(new StopPlayEvent());
 	}
+	
+	@Override
+	public void onBackPressed() {
+		super.onBackPressed();
+		playerview.stop();
+	}
 
 }

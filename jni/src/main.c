@@ -54,17 +54,17 @@ typedef struct playInstance{
 
 }playInstance;
 
-//static int call_back(playInstance *instance){
-//	if(instance->timeout_flag){
-//		LOGE("回调中发现timeout\n");
-//		return 1;
-//	}else if(instance->stop){
-//		LOGE("回调中发现退出\n");
-//		return 1;
-//	}else{
-//		return 0;
-//	}
-//}
+static int call_back(playInstance *instance){
+	if(instance->timeout_flag){
+		LOGE("回调中发现timeout\n");
+		return 1;
+	}else if(instance->stop){
+		LOGE("回调中发现退出\n");
+		return 1;
+	}else{
+		return 0;
+	}
+}
 
 //创建一个Android的bitmap对象
 jobject createBitmap(JNIEnv *pEnv, int pWidth, int pHeight) {
@@ -130,7 +130,7 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_nativedisablevidio(JNIEnv* en
 //从packet队列中取用的线程
 void *getPacket(void *minstance){
 	playInstance *instance = (playInstance *)minstance;
-	fprintf(stderr,"getpacket线程开始\n");
+	LOGE("getpacket线程开始\n");
 	struct timespec *time = malloc(sizeof(struct timespec));
 	time->tv_sec=10;//网络不好最多等10秒
 	time->tv_nsec=0;
@@ -175,7 +175,7 @@ void *getPacket(void *minstance){
 //视频线程
 void *video_thread(void *minstance){
 	playInstance *instance = (playInstance *)minstance;
-	fprintf(stderr,"视频线程开始\n");
+	LOGE("视频线程开始\n");
 	struct timespec *time = malloc(sizeof(struct timespec));
 	time->tv_sec=10;//网络不好最多等10秒
 	time->tv_nsec=0;
@@ -320,7 +320,8 @@ void *audio_thread(void *minstance){
 				jbyte *bytes = (*audioEnv)->GetByteArrayElements(audioEnv, instance->global_aarray, NULL);
 				memcpy(bytes,*(instance->vs->dst_data),dst_linesize);
 				(*audioEnv)->ReleaseByteArrayElements(audioEnv, instance->global_aarray, bytes, 0);
-				(*audioEnv)->CallVoidMethod(audioEnv,instance->gJavaobj,play,instance->global_aarray,dst_linesize);
+				LOGE("音频长度 %d",dst_linesize);
+//				(*audioEnv)->CallVoidMethod(audioEnv,instance->gJavaobj,play,instance->global_aarray,dst_linesize);
 			}
 		}
 		av_free_packet(&pavpacket);
@@ -350,7 +351,7 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	instance->timeout_flag = 0;
 	instance->vs=av_malloc(sizeof (VideoState));
 
-	fprintf(stderr,"开始执行openfile\n");
+	LOGE("开始执行openfile\n");
 	jboolean isfilenameCopy;
 	const char *filename = (*env)-> GetStringUTFChars(env, file, &isfilenameCopy);
 	jclass cls = (*env)->GetObjectClass(env,obj);
@@ -382,8 +383,8 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	avformat_network_init();	//初始化网络
 	pFormatCtx= avformat_alloc_context();
 	pFormatCtx->max_analyze_duration=10000;//最长分析时间10000微秒
-//	pFormatCtx->interrupt_callback.callback = call_back;//设置中断回调函数
-//	pFormatCtx->interrupt_callback.opaque = instance;//中断回调函数的参数
+	pFormatCtx->interrupt_callback.callback = call_back;//设置中断回调函数
+	pFormatCtx->interrupt_callback.opaque = instance;//中断回调函数的参数
 
 	//开始读取线程 提前开始为了捕获到打开文件的超时
 	pthread_t rtid;
@@ -394,7 +395,7 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 		if(instance->stop){
 			return 0;
 		}
-		fprintf(stderr,"无法打开文件\n");
+		LOGE("无法打开文件\n");
 		return -1; // 无法打开视频文件
 	}
 	if(instance->stop){
@@ -403,7 +404,7 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 
 	// 检索视频信息
 	if(avformat_find_stream_info(pFormatCtx, NULL)<0){
-		fprintf(stderr,"无法找到流信息\n");
+		LOGE("无法找到流信息\n");
 		return -1;
 	}
 
@@ -416,11 +417,11 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	for (i=0;i<pFormatCtx->nb_streams;i++){//遍历寻找音频流和视频流
 		if(videoStream<0 && pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO){
 			videoStream = i;
-			fprintf(stderr,"videostream is %d\n",videoStream);
+			LOGE("videostream is %d\n",videoStream);
 		}
 		if(audioStream<0 && pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_AUDIO){
 			audioStream = i;
-			fprintf(stderr,"audiostream is %d\n",audioStream);
+			LOGE("audiostream is %d\n",audioStream);
 			instance->vs->sample_rate_src = pFormatCtx->streams[i]->codec->sample_rate;
 			LOGE("采样率是 %d\n",instance->vs->sample_rate_src);
 			if(instance->vs->sample_rate_src > 0){
@@ -433,10 +434,10 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	}
 
 	if(videoStream==-1){
-		fprintf(stderr,"无法找到视频流");
+		LOGE("无法找到视频流");
 	}
 	if(audioStream==-1 || instance->vs->sample_rate_src<=0){
-		fprintf(stderr,"无法找到音频流");
+		LOGE("无法找到音频流");
 	}
 
 	//打开音频解码器
@@ -445,7 +446,7 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 		aCodec= avcodec_find_decoder(aCodecCtx->codec_id);
 
 		if(avcodec_open2(aCodecCtx,aCodec,&audioOptionsDict)<0){
-			fprintf(stderr,"无法打开解码器");
+			LOGE("无法打开解码器");
 			return -1;
 		}
 	}
@@ -455,7 +456,7 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 		pCodecCtx=pFormatCtx->streams[videoStream]->codec;
 		pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
 		if(avcodec_open2(pCodecCtx,pCodec,&videoOptionsDict)<0){
-			fprintf(stderr,"无法打开视频解码器\n");
+			LOGE("无法打开视频解码器\n");
 			return -1;
 		}
 	}
@@ -487,14 +488,13 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	struct SwrContext *swr_ctx;
 	swr_ctx = swr_alloc();
 
-	av_opt_set_int(swr_ctx, "in_sample_fmt", AV_SAMPLE_FMT_FLT, 0);
+	av_opt_set_int(swr_ctx, "in_sample_fmt", AV_SAMPLE_FMT_FLTP, 0);
 	av_opt_set_int(swr_ctx, "out_sample_fmt", AV_SAMPLE_FMT_S16, 0);
-	av_opt_set_int(swr_ctx, "in_channel_layout", AV_CH_LAYOUT_MONO, 0);
+	av_opt_set_int(swr_ctx, "in_channel_layout", AV_CH_LAYOUT_STEREO, 0);
 	av_opt_set_int(swr_ctx, "out_channel_layout", AV_CH_LAYOUT_MONO, 0);
 
 	swr_init(swr_ctx);
 	uint8_t **dst_data =NULL;
-	int dst_linesize=0;
 
 	instance->vs->RGBAFrame=RGBAFrame;
 	instance->vs->buffer=buffer;

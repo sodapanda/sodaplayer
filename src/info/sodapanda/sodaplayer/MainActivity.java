@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 
 public class MainActivity extends FragmentActivity {
@@ -19,6 +20,8 @@ public class MainActivity extends FragmentActivity {
 	
 	Button button_start;
 	Button button_stop;
+	
+	EditText filename;
 	
 	FrameLayout surface_frame;
 	FrameLayout surface_frame2;
@@ -47,16 +50,16 @@ public class MainActivity extends FragmentActivity {
 		button_stop = (Button) findViewById(R.id.button_stop);
 		
 		final ArrayList<String> rtmplist = new ArrayList<String>();
-		rtmplist.add("rtmp://115.231.101.165/live1/3055");
+		rtmplist.add("rtmp://115.231.101.160/live1/21290");
 		
 		final ArrayList<String> rtmplist2 = new ArrayList<String>();
-		rtmplist2.add("rtmp://115.231.101.166/live4/1288");
+		rtmplist2.add("rtmp://115.231.101.166/live4/3456");
 		button_start.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
 				player_surface.startPlayer(rtmplist);
-				playerSurface2.startPlayer(rtmplist2);
+//				playerSurface2.startPlayer(rtmplist2);
 			}
 		});
 		

@@ -63,8 +63,8 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 	public byte[] initAdudioTrack(int sample_rate){
 		Log.i("soda","java 得到采样率 "+sample_rate);
 		int buffer_size=AudioTrack.getMinBufferSize(sample_rate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
-		if(buffer_size<4096){
-			buffer_size = 4096;
+		if(buffer_size<8192){
+			buffer_size = 8192;
 		}
 		audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sample_rate,AudioFormat.CHANNEL_OUT_MONO,AudioFormat.ENCODING_PCM_16BIT, buffer_size,AudioTrack.MODE_STREAM);
 
