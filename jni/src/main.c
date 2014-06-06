@@ -32,6 +32,8 @@ typedef struct VideoState{//解码过程中的数据结构
 	struct SwrContext *swr_ctx;
 	int64_t now_audio_dts;
 	int sample_rate_src;
+	int sample_fmt;
+	int sample_layout;
 }VideoState;
 
 typedef struct playInstance{
@@ -320,8 +322,8 @@ void *audio_thread(void *minstance){
 				jbyte *bytes = (*audioEnv)->GetByteArrayElements(audioEnv, instance->global_aarray, NULL);
 				memcpy(bytes,*(instance->vs->dst_data),dst_linesize);
 				(*audioEnv)->ReleaseByteArrayElements(audioEnv, instance->global_aarray, bytes, 0);
-				LOGE("音频长度 %d",dst_linesize);
-//				(*audioEnv)->CallVoidMethod(audioEnv,instance->gJavaobj,play,instance->global_aarray,dst_linesize);
+//				LOGE("音频长度 %d",dst_linesize);
+				(*audioEnv)->CallVoidMethod(audioEnv,instance->gJavaobj,play,instance->global_aarray,dst_linesize);
 			}
 		}
 		av_free_packet(&pavpacket);
@@ -423,7 +425,9 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 			audioStream = i;
 			LOGE("audiostream is %d\n",audioStream);
 			instance->vs->sample_rate_src = pFormatCtx->streams[i]->codec->sample_rate;
-			LOGE("采样率是 %d\n",instance->vs->sample_rate_src);
+			instance->vs->sample_fmt = pFormatCtx->streams[i]->codec->sample_fmt;
+			instance->vs->sample_layout = pFormatCtx->streams[i]->codec->channel_layout;
+//			LOGE("采样率是 %d\n",instance->vs->sample_rate_src);
 			if(instance->vs->sample_rate_src > 0){
 				jbyteArray aarray = (jbyteArray)((*env)->CallObjectMethod(env,obj,instance->initAdudioTrack,instance->vs->sample_rate_src));
 				instance->global_aarray = (*env)->NewGlobalRef(env,aarray);
@@ -488,9 +492,9 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	struct SwrContext *swr_ctx;
 	swr_ctx = swr_alloc();
 
-	av_opt_set_int(swr_ctx, "in_sample_fmt", AV_SAMPLE_FMT_FLTP, 0);
+	av_opt_set_int(swr_ctx, "in_sample_fmt", instance->vs->sample_fmt, 0);
 	av_opt_set_int(swr_ctx, "out_sample_fmt", AV_SAMPLE_FMT_S16, 0);
-	av_opt_set_int(swr_ctx, "in_channel_layout", AV_CH_LAYOUT_STEREO, 0);
+	av_opt_set_int(swr_ctx, "in_channel_layout", instance->vs->sample_layout, 0);
 	av_opt_set_int(swr_ctx, "out_channel_layout", AV_CH_LAYOUT_MONO, 0);
 
 	swr_init(swr_ctx);

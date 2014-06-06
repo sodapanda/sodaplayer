@@ -50,16 +50,16 @@ public class MainActivity extends FragmentActivity {
 		button_stop = (Button) findViewById(R.id.button_stop);
 		
 		final ArrayList<String> rtmplist = new ArrayList<String>();
-		rtmplist.add("rtmp://115.231.101.160/live1/21290");
+		rtmplist.add("rtmp://115.231.101.160/live1/testaac");
 		
 		final ArrayList<String> rtmplist2 = new ArrayList<String>();
-		rtmplist2.add("rtmp://115.231.101.166/live4/3456");
+		rtmplist2.add("rtmp://115.231.101.160/live1/testnms");
 		button_start.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
 				player_surface.startPlayer(rtmplist);
-//				playerSurface2.startPlayer(rtmplist2);
+				playerSurface2.startPlayer(rtmplist2);
 			}
 		});
 		
