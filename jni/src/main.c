@@ -27,7 +27,7 @@ typedef struct VideoState{//解码过程中的数据结构
 	void* buffer;
 	int audioStream;
 	AVCodecContext *aCodecCtx;
-	AVFrame decodec_frame;
+	AVFrame *audio_decode_frame;
 	uint8_t **dst_data;
 	struct SwrContext *swr_ctx;
 	int64_t now_audio_dts;
@@ -307,11 +307,10 @@ void *audio_thread(void *minstance){
 		int dst_linesize;
 		while(pavpacket.size>0){
 			int got_frame=0;
-			len = avcodec_decode_audio4(instance->vs->aCodecCtx,&(instance->vs->decodec_frame),&got_frame,&pavpacket);
-
+			len = avcodec_decode_audio4(instance->vs->aCodecCtx,instance->vs->audio_decode_frame,&got_frame,&pavpacket);
 			//音频转化
-			av_samples_alloc_array_and_samples(&(instance->vs->dst_data),&dst_linesize,1,(instance->vs->decodec_frame).nb_samples,AV_SAMPLE_FMT_S16,0);
-			swr_convert(instance->vs->swr_ctx,instance->vs->dst_data,(instance->vs->decodec_frame).nb_samples,(const uint8_t **)&(instance->vs->decodec_frame).data[0],(instance->vs->decodec_frame).nb_samples);
+			av_samples_alloc_array_and_samples(&(instance->vs->dst_data),&dst_linesize,1,(instance->vs->audio_decode_frame)->nb_samples,AV_SAMPLE_FMT_S16,0);
+			swr_convert(instance->vs->swr_ctx,instance->vs->dst_data,(instance->vs->audio_decode_frame)->nb_samples,(const uint8_t **)&(instance->vs->audio_decode_frame->data[0]),(instance->vs->audio_decode_frame)->nb_samples);
 			if(len<0){
 				return NULL;
 			}
@@ -379,7 +378,9 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	AVCodec *aCodec=NULL;
 	int audioStream;
 	AVDictionary *audioOptionsDict = NULL;
-	AVFrame decodec_frame;
+	AVFrame *audio_frame;
+	audio_frame = avcodec_alloc_frame();
+
 
 	av_register_all();	//注册解码器等操作
 	avformat_network_init();	//初始化网络
@@ -509,7 +510,7 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	instance->vs->videoStream=videoStream;
 	instance->vs->aCodecCtx=aCodecCtx;
 	instance->vs->audioStream=audioStream;
-	instance->vs->decodec_frame=decodec_frame;
+	instance->vs->audio_decode_frame=audio_frame;
 	instance->vs->dst_data=dst_data;
 	instance->vs->swr_ctx=swr_ctx;
 
