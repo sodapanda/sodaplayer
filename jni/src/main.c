@@ -133,25 +133,26 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_nativedisablevidio(JNIEnv* en
 void *getPacket(void *minstance){
 	playInstance *instance = (playInstance *)minstance;
 	LOGE("getpacket线程开始\n");
-	struct timespec *time = malloc(sizeof(struct timespec));
-	time->tv_sec=10;//网络不好最多等10秒
-	time->tv_nsec=0;
+	struct timespec time;
+	time.tv_sec=10;//网络不好最多等10秒
+	time.tv_nsec=0;
+	struct threadmsg msg;
 
 	while(1){
-		struct threadmsg *msg = malloc(sizeof(struct threadmsg));
-		msg->data=NULL;
+		memset(&msg,0,sizeof(struct threadmsg));
+		msg.data=NULL;
 
 		AVPacket pavpacket;
-		thread_queue_get(instance->queue,time,msg);
+		thread_queue_get(instance->queue,&time,&msg);
 
-		if(msg->msgtype==-1){//正常退出
+		if(msg.msgtype==-1){//正常退出
 			LOGE("get线程正常退出\n");
 			thread_queue_add(instance->video_queue,NULL,-1);
 			thread_queue_add(instance->audio_queue,NULL,-1);
 			break;
 		}
 
-		if(msg->data ==NULL){
+		if(msg.data ==NULL){
 			LOGE("get线程超时退出\n");
 			thread_queue_add(instance->video_queue,NULL,-1);
 			thread_queue_add(instance->audio_queue,NULL,-1);
@@ -159,7 +160,7 @@ void *getPacket(void *minstance){
 			break;
 		}
 
-		AVPacket *packet_p = msg->data;
+		AVPacket *packet_p = msg.data;
 		pavpacket = *packet_p;
 
 		if(pavpacket.stream_index==instance->vs->videoStream){
@@ -168,9 +169,7 @@ void *getPacket(void *minstance){
 		if(pavpacket.stream_index==instance->vs->audioStream){
 			thread_queue_add(instance->audio_queue,packet_p,1);
 		}
-
 	}
-	free(time);
 	return NULL;
 }
 
@@ -178,26 +177,26 @@ void *getPacket(void *minstance){
 void *video_thread(void *minstance){
 	playInstance *instance = (playInstance *)minstance;
 	LOGE("视频线程开始\n");
-	struct timespec *time = malloc(sizeof(struct timespec));
-	time->tv_sec=10;//网络不好最多等10秒
-	time->tv_nsec=0;
+	struct timespec time;
+	time.tv_sec=10;//网络不好最多等10秒
+	time.tv_nsec=0;
+	struct threadmsg msg;
 
 	while(1){
 		if(instance->stop){
 			break;
 		}
-		struct threadmsg *msg = malloc(sizeof(struct threadmsg));
-		msg->data=NULL;
+		msg.data=NULL;
 
 		AVPacket pavpacket;
-		thread_queue_get(instance->video_queue,time,msg);
+		thread_queue_get(instance->video_queue,&time,&msg);
 
-		if(msg->msgtype==-1){//正常退出
+		if(msg.msgtype==-1){//正常退出
 			LOGE("视频线程正常退出\n");
 			break;
 		}
 
-		if(msg->data ==NULL){
+		if(msg.data ==NULL){
 			LOGE("视频线程超时退出");
 			if(!instance->stop){
 				instance->timeout_flag = 1;
@@ -205,7 +204,7 @@ void *video_thread(void *minstance){
 			break;
 		}
 
-		AVPacket *packet_p = msg->data;
+		AVPacket *packet_p = msg.data;
 		pavpacket = *packet_p;
 		int64_t packet_dts = packet_p->dts;
 
@@ -241,9 +240,8 @@ void *video_thread(void *minstance){
 				ANativeWindow_unlockAndPost(instance->window);//释放对surface的锁，并且更新对应surface数据进行显示
 			}
 		}
-		av_free_packet(&pavpacket);
-		free(msg->data);
-		free(msg);
+		av_free_packet(packet_p);
+//		free(msg.data);
 
 		//延时操作
 		int64_t delta = packet_dts - instance->vs->now_audio_dts;
@@ -254,7 +252,6 @@ void *video_thread(void *minstance){
 			usleep(66600);
 		}
 	}
-	free(time);
 	return NULL;
 }
 
@@ -268,25 +265,25 @@ void *audio_thread(void *minstance){
 	jclass javacls = (*audioEnv)->GetObjectClass(audioEnv,instance->gJavaobj);
 	jmethodID play = (*audioEnv)->GetMethodID(audioEnv,javacls,"playSound","([BI)V");
 
-	struct timespec *time = malloc(sizeof(struct timespec));
-	time->tv_sec=10;//网络不好最多等10秒
-	time->tv_nsec=0;
+	struct timespec time;
+	time.tv_sec=10;//网络不好最多等10秒
+	time.tv_nsec=0;
+	struct threadmsg msg;
 
 	while(1){
 		if(instance->stop){
 			break;
 		}
-		struct threadmsg *msg = malloc(sizeof(struct threadmsg));
-		msg->data=NULL;
+		msg.data=NULL;
 
 		AVPacket pavpacket;
-		thread_queue_get(instance->audio_queue,time,msg);
+		thread_queue_get(instance->audio_queue,&time,&msg);
 
-		if(msg->msgtype==-1){//正常退出
+		if(msg.msgtype==-1){//正常退出
 			break;
 		}
 
-		if(msg->data ==NULL){
+		if(msg.data ==NULL){
 			LOGE("音频线程超时退出");
 			if(!instance->stop){
 				instance->timeout_flag = 1;
@@ -294,7 +291,7 @@ void *audio_thread(void *minstance){
 			break;
 		}
 
-		AVPacket *packet_p = msg->data;
+		AVPacket *packet_p = msg.data;
 		pavpacket = *packet_p;
 
 		if(pavpacket.stream_index!=instance->vs->audioStream){
@@ -325,12 +322,10 @@ void *audio_thread(void *minstance){
 				(*audioEnv)->CallVoidMethod(audioEnv,instance->gJavaobj,play,instance->global_aarray,dst_linesize);
 			}
 		}
-		av_free_packet(&pavpacket);
-		free(msg->data);
-		free(msg);
+		av_free_packet(packet_p);
+//		free(msg.data);
 	}
 	(*(instance->gJavaVm))->DetachCurrentThread(instance->gJavaVm);
-	free(time);
 	LOGE("音频线程退出\n");
 	return NULL;
 }
