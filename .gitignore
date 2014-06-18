@@ -30,3 +30,6 @@ proguard/
 
 #ndk
 obj/
+
+#idea
+SodaPlayer.iml

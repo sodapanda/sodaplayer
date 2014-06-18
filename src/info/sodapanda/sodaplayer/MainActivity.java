@@ -36,12 +36,42 @@ public class MainActivity extends Activity {
 		int screen_width = display.getWidth();
 		width=screen_width;
 		height = (int) (screen_width * 0.75f);
-		player_surface = new FFmpegVideoView(this);
+		player_surface = new FFmpegVideoView(this,new PlayCallback() {
+            @Override
+            public void onConnecting() {
+
+            }
+
+            @Override
+            public void onConnected() {
+
+            }
+
+            @Override
+            public void onStop() {
+
+            }
+        });
 		player_surface.setLayoutParams(new LayoutParams(width, height));
 		surface_frame = (FrameLayout) findViewById(R.id.surface_frame);
 		surface_frame.addView(player_surface);
 		
-		final FFmpegVideoView playerSurface2 = new FFmpegVideoView(this);
+		final FFmpegVideoView playerSurface2 = new FFmpegVideoView(this,new PlayCallback() {
+            @Override
+            public void onConnecting() {
+
+            }
+
+            @Override
+            public void onConnected() {
+
+            }
+
+            @Override
+            public void onStop() {
+
+            }
+        });
 		playerSurface2.setLayoutParams(new LayoutParams(320, 240));
 		surface_frame2 = (FrameLayout) findViewById(R.id.surface_frame2);
 		surface_frame2.addView(playerSurface2);

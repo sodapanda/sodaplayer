@@ -23,12 +23,15 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 	private long instance;
 	
 	Thread play_thread;
+
+    private PlayCallback playCallback;
 	
 	int retry_time = 0;
 
 	
-	public FFmpegVideoView(Context context) {
+	public FFmpegVideoView(Context context,PlayCallback playCallback) {
 		super(context);
+        this.playCallback = playCallback;
 		instance = getPlayInstance();
 		Log.i("soda", "得到一个播放事例 "+instance);
 		
@@ -98,8 +101,7 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 		if(play_thread!=null && play_thread.isAlive()){
 			return ;
 		}
-
-		setVisibility(View.VISIBLE);
+        playCallback.onConnecting();
 		play_thread = new Thread(new Runnable() {
 			public void run() {
 				is_playing = true;
@@ -110,7 +112,7 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 						public void run() {
 							Log.i("soda","打开文件错误");
 							stop();
-							restartplay();
+                            videoDisConnected();
 						}
 					});
 				}
@@ -125,29 +127,15 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 		}
 		this.rtmpUrlList = rtmpUrlList;
 		String filename = rtmpUrlList.get(0);
+        Log.i("soda","播放地址 "+filename);
 		start(filename);
 	}
-	
-	/**
-	 * start to reconnect video source when needed
-	 */
-	private void restartplay(){
-		Log.i("pipi","重新连接");
-		activity.runOnUiThread(new Runnable() {
-			
-			@Override
-			public void run() {
-				onNativeDisConnected();
-			}
-		});
-	}
-	
+
 	/**
 	 * stop play
 	 */
 	public void stop() {
 		nativestop(instance);
-		setVisibility(View.INVISIBLE);
 		if (play_thread!=null) {
 			try {
 				play_thread.join();
@@ -163,15 +151,17 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 			audioTrack.release();
 			audioTrack=null;
 		}
+        playCallback.onStop();
 	}
 	
 	public void onNativeConnected(){
 		Log.i("soda","视频连接上了");
+        playCallback.onConnected();
 		retry_time = 0;
 	}
 	
 	//**视频reconnect */
-	public void onNativeDisConnected() {
+	public void videoDisConnected() {
 		if (retry_time < rtmpUrlList.size()) {
 			Log.i("test","第" + retry_time + "次重试,地址是" + rtmpUrlList.get(retry_time));
 			start(rtmpUrlList.get(retry_time));
