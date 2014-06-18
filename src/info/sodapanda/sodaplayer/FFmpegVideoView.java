@@ -153,8 +153,18 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 		}
         playCallback.onStop();
 	}
-	
-	public void onNativeConnected(){
+
+    public void finishplay() {
+        if (audioTrack != null) {
+            audioTrack.flush();
+            audioTrack.stop();
+            audioTrack.release();
+            audioTrack = null;
+        }
+        playCallback.onStop();
+    }
+
+    public void onNativeConnected(){
 		Log.i("soda","视频连接上了");
         playCallback.onConnected();
 		retry_time = 0;

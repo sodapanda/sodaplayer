@@ -49,6 +49,7 @@ typedef struct playInstance{
 	jbyteArray global_aarray;
 	jmethodID initAdudioTrack;
 	jmethodID onNativeConnected;
+	jmethodID finishplay;
 	//队列
 	struct threadqueue *queue;
 	struct threadqueue *video_queue;
@@ -353,6 +354,7 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	jclass cls = (*env)->GetObjectClass(env,obj);
 	instance->initAdudioTrack = (*env)->GetMethodID(env,cls,"initAdudioTrack","(I)[B");
 	instance->onNativeConnected = (*env)->GetMethodID(env,cls,"onNativeConnected","()V");
+	instance->finishplay = (*env)->GetMethodID(env,cls,"finishplay","()V");
 
 	(*env)->GetJavaVM(env,&(instance->gJavaVm));
 	instance->gJavaobj = (*env)->NewGlobalRef(env,obj);
@@ -569,6 +571,8 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
     if(instance->timeout_flag){
     	return -1;
     }else{
+        LOGE("执行到finishplay");
+    	(*env)->CallVoidMethod(env,obj,instance->finishplay);
     	return 0;
     }
 }
