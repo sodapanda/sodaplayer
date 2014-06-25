@@ -113,8 +113,8 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_setupsurface(JNIEnv* env,jobj
 
 long Java_info_sodapanda_sodaplayer_FFmpegVideoView_getPlayInstance(JNIEnv* env,jobject thiz){
 	playInstance *instance = malloc(sizeof(playInstance));
-	instance->width = 320;
-	instance->height = 240;
+	instance->width = 640;
+	instance->height = 480;
 	return (long)instance;
 }
 
@@ -425,7 +425,6 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 			instance->vs->sample_rate_src = pFormatCtx->streams[i]->codec->sample_rate;
 			instance->vs->sample_fmt = pFormatCtx->streams[i]->codec->sample_fmt;
 			instance->vs->sample_layout = pFormatCtx->streams[i]->codec->channel_layout;
-//			LOGE("采样率是 %d\n",instance->vs->sample_rate_src);
 			if(instance->vs->sample_rate_src > 0){
 				jbyteArray aarray = (jbyteArray)((*env)->CallObjectMethod(env,obj,instance->initAdudioTrack,instance->vs->sample_rate_src));
 				instance->global_aarray = (*env)->NewGlobalRef(env,aarray);
@@ -437,9 +436,11 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 
 	if(videoStream==-1){
 		LOGE("无法找到视频流");
+		return -1;
 	}
 	if(audioStream==-1 || instance->vs->sample_rate_src<=0){
-		LOGE("无法找到音频流");
+		LOGE("sample_rate is wrong");
+		return -1;
 	}
 
 	//打开音频解码器
