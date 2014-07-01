@@ -188,7 +188,6 @@ void *video_thread(void *minstance){
 		}
 		msg.data=NULL;
 
-		AVPacket pavpacket;
 		thread_queue_get(instance->video_queue,&time,&msg);
 
 		if(msg.msgtype==-1){//正常退出
@@ -205,7 +204,7 @@ void *video_thread(void *minstance){
 		}
 
 		AVPacket *packet_p = msg.data;
-		pavpacket = *packet_p;
+		AVPacket pavpacket = *packet_p;
 		int64_t packet_dts = packet_p->dts;
 
 		if(packet_dts<=0){//dts值无效
