@@ -28,7 +28,6 @@ typedef struct VideoState{//解码过程中的数据结构
 	int audioStream;
 	AVCodecContext *aCodecCtx;
 	AVFrame *audio_decode_frame;
-	uint8_t **dst_data;
 	struct SwrContext *swr_ctx;
 	int64_t now_audio_dts;
 	int sample_rate_src;
@@ -242,7 +241,7 @@ void *video_thread(void *minstance){
 			}
 		}
 		av_free_packet(packet_p);
-//		free(msg.data);
+		av_free(msg.data);
 
 		//延时操作
 		int64_t delta = packet_dts - instance->vs->now_audio_dts;
@@ -294,21 +293,22 @@ void *audio_thread(void *minstance){
 
 		AVPacket *packet_p = msg.data;
 		pavpacket = *packet_p;
+		uint8_t ** dst_data;
 
 		if(pavpacket.stream_index!=instance->vs->audioStream){
 			continue;
 		}
-
 
 		instance->vs->now_audio_dts = packet_p->dts;
 		int len =0;
 		int dst_linesize;
 		while(pavpacket.size>0){
 			int got_frame=0;
+
 			len = avcodec_decode_audio4(instance->vs->aCodecCtx,instance->vs->audio_decode_frame,&got_frame,&pavpacket);
 			//音频转化
-			av_samples_alloc_array_and_samples(&(instance->vs->dst_data),&dst_linesize,1,(instance->vs->audio_decode_frame)->nb_samples,AV_SAMPLE_FMT_S16,0);
-			swr_convert(instance->vs->swr_ctx,instance->vs->dst_data,(instance->vs->audio_decode_frame)->nb_samples,(const uint8_t **)&(instance->vs->audio_decode_frame->data[0]),(instance->vs->audio_decode_frame)->nb_samples);
+			av_samples_alloc_array_and_samples(&dst_data,&dst_linesize,1,(instance->vs->audio_decode_frame)->nb_samples,AV_SAMPLE_FMT_S16,0);
+			swr_convert(instance->vs->swr_ctx,dst_data,(instance->vs->audio_decode_frame)->nb_samples,(const uint8_t **)&(instance->vs->audio_decode_frame->data[0]),(instance->vs->audio_decode_frame)->nb_samples);
 			if(len<0){
 				return NULL;
 			}
@@ -317,14 +317,14 @@ void *audio_thread(void *minstance){
 
 			if(got_frame){
 				jbyte *bytes = (*audioEnv)->GetByteArrayElements(audioEnv, instance->global_aarray, NULL);
-				memcpy(bytes,*(instance->vs->dst_data),dst_linesize);
+				memcpy(bytes,*dst_data,dst_linesize);
 				(*audioEnv)->ReleaseByteArrayElements(audioEnv, instance->global_aarray, bytes, 0);
-//				LOGE("音频长度 %d",dst_linesize);
 				(*audioEnv)->CallVoidMethod(audioEnv,instance->gJavaobj,play,instance->global_aarray,dst_linesize);
 			}
 		}
+		av_free(dst_data[0]);
 		av_free_packet(packet_p);
-//		free(msg.data);
+		av_free(msg.data);
 	}
 	(*(instance->gJavaVm))->DetachCurrentThread(instance->gJavaVm);
 	LOGE("音频线程退出\n");
@@ -377,7 +377,6 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	AVDictionary *audioOptionsDict = NULL;
 	AVFrame *audio_frame;
 	audio_frame = avcodec_alloc_frame();
-
 
 	av_register_all();	//注册解码器等操作
 	avformat_network_init();	//初始化网络
@@ -497,7 +496,6 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	av_opt_set_int(swr_ctx, "out_channel_layout", AV_CH_LAYOUT_MONO, 0);
 
 	swr_init(swr_ctx);
-	uint8_t **dst_data =NULL;
 
 	instance->vs->RGBAFrame=RGBAFrame;
 	instance->vs->buffer=buffer;
@@ -509,7 +507,6 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	instance->vs->aCodecCtx=aCodecCtx;
 	instance->vs->audioStream=audioStream;
 	instance->vs->audio_decode_frame=audio_frame;
-	instance->vs->dst_data=dst_data;
 	instance->vs->swr_ctx=swr_ctx;
 
 	//视频线程
@@ -555,9 +552,6 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	thread_queue_cleanup(instance->video_queue,1);
 	thread_queue_cleanup(instance->audio_queue,1);
 
-    if (dst_data)
-        av_freep(&dst_data[0]);
-    av_freep(&dst_data);
     av_free(instance->vs);
     av_free(RGBAFrame);
     av_free(pFrame);
