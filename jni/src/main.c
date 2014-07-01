@@ -310,7 +310,8 @@ void *audio_thread(void *minstance){
 			av_samples_alloc_array_and_samples(&dst_data,&dst_linesize,1,(instance->vs->audio_decode_frame)->nb_samples,AV_SAMPLE_FMT_S16,0);
 			swr_convert(instance->vs->swr_ctx,dst_data,(instance->vs->audio_decode_frame)->nb_samples,(const uint8_t **)&(instance->vs->audio_decode_frame->data[0]),(instance->vs->audio_decode_frame)->nb_samples);
 			if(len<0){
-				return NULL;
+				LOGE("audio decode return wrong");
+				break;
 			}
 			pavpacket.size -= len;
 			pavpacket.data += len;
