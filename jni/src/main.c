@@ -100,12 +100,11 @@ jobject createBitmap(JNIEnv *pEnv, int pWidth, int pHeight) {
 
 //当Android系统中对应播放窗口的Surfaceview创建的时候，在native层得到这个surface的引用地址
 int Java_info_sodapanda_sodaplayer_FFmpegVideoView_setupsurface(JNIEnv* env,jobject thiz,jobject pSurface,int pwidth,int pheight,jlong ptr){
-	LOGE("setupsurface 开始\n");
 	playInstance *instance = (playInstance *)ptr;
 	instance->window = ANativeWindow_fromSurface(env,pSurface);
-//	if(ANativeWindow_setBuffersGeometry(instance->window,instance->width,instance->height,WINDOW_FORMAT_RGBA_8888)){
-//		LOGE("创建window完成\n");
-//	};
+	if(instance->width !=0){
+		setAndroidWindowPix(instance->width,instance->height,instance);
+	}
 	instance->disable_video=0;
 	return 0;
 }

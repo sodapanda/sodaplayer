@@ -60,7 +60,7 @@ public class MainActivity extends Activity {
 		button_stop = (Button) findViewById(R.id.button_stop);
 		
 		final ArrayList<String> rtmplist = new ArrayList<String>();
-		rtmplist.add("rtmp://115.231.101.160/live1/1/1000001");
+		rtmplist.add("rtmp://115.231.101.160/live1/test");
 		
 		final ArrayList<String> rtmplist2 = new ArrayList<String>();
 		rtmplist2.add("rtmp://115.231.101.160/live1/testnms");

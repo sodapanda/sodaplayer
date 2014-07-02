@@ -11,9 +11,10 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 import android.widget.Toast;
 
+//TODO Play streams without audio
+//TODO Set max queue length
 public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callback{
 	private Activity activity;
 	public static boolean is_playing = false;
@@ -27,6 +28,10 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
     private PlayCallback playCallback;
 	
 	int retry_time = 0;
+	
+	public FFmpegVideoView(Context context){
+		super(context);
+	}
 
 	
 	public FFmpegVideoView(Context context,PlayCallback playCallback) {
@@ -45,16 +50,18 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
-		
+		Log.i("soda","surface created");
 	}
 
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,int height) {
+		Log.i("soda","surface changed");
 		setupsurface(holder.getSurface(), width, height,instance);
 	}
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
+		Log.i("soda","surface destroyed");
 		nativedisablevidio(instance);
 	}
 	
