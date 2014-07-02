@@ -100,12 +100,11 @@ jobject createBitmap(JNIEnv *pEnv, int pWidth, int pHeight) {
 
 //当Android系统中对应播放窗口的Surfaceview创建的时候，在native层得到这个surface的引用地址
 int Java_info_sodapanda_sodaplayer_FFmpegVideoView_setupsurface(JNIEnv* env,jobject thiz,jobject pSurface,int pwidth,int pheight,jlong ptr){
-	LOGE("setupsurface 开始\n");
 	playInstance *instance = (playInstance *)ptr;
 	instance->window = ANativeWindow_fromSurface(env,pSurface);
-//	if(ANativeWindow_setBuffersGeometry(instance->window,instance->width,instance->height,WINDOW_FORMAT_RGBA_8888)){
-//		LOGE("创建window完成\n");
-//	};
+	if(instance->width !=0){
+		setAndroidWindowPix(instance->width,instance->height,instance);
+	}
 	instance->disable_video=0;
 	return 0;
 }
@@ -233,9 +232,9 @@ void *video_thread(void *minstance){
 					instance->vs->RGBAFrame->data,
 					instance->vs->RGBAFrame->linesize
 				);
-			if (ANativeWindow_lock(instance->window, &(instance->vs->windowBuffer), NULL) < 0) {
+			if (!(instance->disable_video) && ANativeWindow_lock(instance->window, &(instance->vs->windowBuffer), NULL) < 0) {
 				LOGE("cannot lock window");
-				return NULL;
+				continue;
 			}else if(!instance->disable_video){
 				memcpy((instance->vs->windowBuffer).bits, instance->vs->buffer,  instance->width * instance->height * 4);//将解码出来的数据复制到surfaceview对应的内存区域
 				ANativeWindow_unlockAndPost(instance->window);//释放对surface的锁，并且更新对应surface数据进行显示
