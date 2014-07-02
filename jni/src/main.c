@@ -103,17 +103,19 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_setupsurface(JNIEnv* env,jobj
 	LOGE("setupsurface 开始\n");
 	playInstance *instance = (playInstance *)ptr;
 	instance->window = ANativeWindow_fromSurface(env,pSurface);
-	if(ANativeWindow_setBuffersGeometry(instance->window,instance->width,instance->height,WINDOW_FORMAT_RGBA_8888)){
-		LOGE("创建window完成\n");
-	};
+//	if(ANativeWindow_setBuffersGeometry(instance->window,instance->width,instance->height,WINDOW_FORMAT_RGBA_8888)){
+//		LOGE("创建window完成\n");
+//	};
 	instance->disable_video=0;
 	return 0;
 }
 
+void setAndroidWindowPix(int width,int height,playInstance *instance){
+	ANativeWindow_setBuffersGeometry(instance->window,width,height,WINDOW_FORMAT_RGBA_8888);
+}
+
 long Java_info_sodapanda_sodaplayer_FFmpegVideoView_getPlayInstance(JNIEnv* env,jobject thiz){
 	playInstance *instance = malloc(sizeof(playInstance));
-	instance->width = 640;
-	instance->height = 480;
 	return (long)instance;
 }
 
@@ -462,6 +464,12 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 			return -1;
 		}
 	}
+
+	instance->width = pCodecCtx->width;
+	instance->height = pCodecCtx->height;
+
+	setAndroidWindowPix(pCodecCtx->width,pCodecCtx->height,instance);
+
 	pFrame = avcodec_alloc_frame();
 
 	//视频转换
@@ -469,8 +477,8 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 		pCodecCtx->width,
 		pCodecCtx->height,
 		pCodecCtx->pix_fmt,
-		instance->width,
-		instance->height,
+		pCodecCtx->width,
+		pCodecCtx->height,
 		AV_PIX_FMT_RGBA,
 		SWS_BILINEAR,
 		NULL,
@@ -479,11 +487,11 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	);
 
 	//创建bitmap
-	bitmap = createBitmap(env, instance->width, instance->height);
+	bitmap = createBitmap(env, pCodecCtx->width, pCodecCtx->height);
 	AndroidBitmap_lockPixels(env, bitmap, &buffer);
 	AVFrame *RGBAFrame;
 	RGBAFrame = avcodec_alloc_frame();
-	avpicture_fill((AVPicture *) RGBAFrame, buffer, AV_PIX_FMT_RGBA, instance->width, instance->height);
+	avpicture_fill((AVPicture *) RGBAFrame, buffer, AV_PIX_FMT_RGBA, pCodecCtx->width, pCodecCtx->height);
 	ANativeWindow_Buffer windowBuffer;
 
 	//原始音频转换

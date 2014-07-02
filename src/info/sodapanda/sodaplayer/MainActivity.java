@@ -29,6 +29,7 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		filename = (EditText) findViewById(R.id.filename);
 
 		//surfaceView
 		Display display = getWindowManager().getDefaultDisplay();
@@ -67,6 +68,8 @@ public class MainActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
+				String rtmpurl = filename.getText().toString();
+				rtmplist.add(0, rtmpurl);
 				player_surface.startPlayer(rtmplist);
 			}
 		});
