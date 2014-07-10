@@ -7,6 +7,8 @@
 #include <libavutil/opt.h>
 #include <libswresample/swresample.h>
 #include <libavutil/samplefmt.h>
+#include <libavutil/time.h>
+#include <libavutil/rational.h>
 
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
@@ -29,10 +31,12 @@ typedef struct VideoState{//解码过程中的数据结构
 	AVCodecContext *aCodecCtx;
 	AVFrame *audio_decode_frame;
 	struct SwrContext *swr_ctx;
-	int64_t now_audio_dts;
 	int sample_rate_src;
 	int sample_fmt;
 	int sample_layout;
+	int64_t start_time;
+	double video_time_base;
+	double audio_time_base;
 }VideoState;
 
 typedef struct playInstance{
@@ -219,6 +223,23 @@ void *video_thread(void *minstance){
 			continue;
 		}
 
+		//延时同步
+		int64_t pkt_pts = pavpacket.pts;
+		double show_time = pkt_pts * (instance->vs->video_time_base);
+		int64_t show_time_micro = show_time * 1000000;
+		int64_t played_time = av_gettime() - instance->vs->start_time;
+		int64_t delta_time = show_time_micro - played_time;
+		if(delta_time< -(0.2 * 1000000)){
+			LOGE("视频跳帧出现\n");
+			continue;
+			av_free_packet(packet_p);
+			av_free(msg.data);
+		}
+
+		if(delta_time>0){
+			av_usleep(delta_time);
+		}
+
 		int frame_finished=0;
 		avcodec_decode_video2(instance->vs->pCodecCtx, instance->vs->pFrame, &frame_finished,&pavpacket);//将pavpacket中的数据解码成，放入pFram中
 		if(frame_finished){
@@ -242,15 +263,6 @@ void *video_thread(void *minstance){
 		}
 		av_free_packet(packet_p);
 		av_free(msg.data);
-
-		//延时操作
-		int64_t delta = packet_dts - instance->vs->now_audio_dts;
-		if(delta<0){
-			continue;
-		}
-		if(delta>0){
-			usleep(66600);
-		}
 	}
 	return NULL;
 }
@@ -299,7 +311,19 @@ void *audio_thread(void *minstance){
 			continue;
 		}
 
-		instance->vs->now_audio_dts = packet_p->dts;
+		//延时同步
+		int64_t pkt_pts = pavpacket.pts;
+		double show_time = pkt_pts * (instance->vs->audio_time_base);
+		int64_t show_time_micro = show_time * 1000000;
+		int64_t played_time = av_gettime() - instance->vs->start_time;
+		int64_t delta_time = show_time_micro - played_time;
+		if(delta_time< -(0.2 * 1000000)){
+			LOGE("音频跳帧出现\n");
+			continue;
+			av_free_packet(packet_p);
+			av_free(msg.data);
+		}
+
 		int len =0;
 		int dst_linesize;
 		while(pavpacket.size>0){
@@ -331,8 +355,6 @@ void *audio_thread(void *minstance){
 	LOGE("音频线程退出\n");
 	return NULL;
 }
-
-
 
 //启动播放器
 int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject obj,jstring file,jlong ptr){
@@ -417,11 +439,13 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	for (i=0;i<pFormatCtx->nb_streams;i++){//遍历寻找音频流和视频流
 		if(videoStream<0 && pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO){
 			videoStream = i;
+			instance->vs->video_time_base = av_q2d(pFormatCtx->streams[videoStream]->time_base);
 			LOGE("videostream is %d\n",videoStream);
 		}
 		if(audioStream<0 && pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_AUDIO){
 			audioStream = i;
 			LOGE("audiostream is %d\n",audioStream);
+			instance->vs->audio_time_base = av_q2d(pFormatCtx->streams[audioStream]->time_base);
 			instance->vs->sample_rate_src = pFormatCtx->streams[i]->codec->sample_rate;
 			instance->vs->sample_fmt = pFormatCtx->streams[i]->codec->sample_fmt;
 			instance->vs->sample_layout = pFormatCtx->streams[i]->codec->channel_layout;
@@ -516,6 +540,8 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	instance->vs->audio_decode_frame=audio_frame;
 	instance->vs->swr_ctx=swr_ctx;
 
+	//成功打开视频文件之后开始计时
+	instance->vs->start_time = av_gettime();
 	//视频线程
 	pthread_t video_tid;
 	if(videoStream!=-1){

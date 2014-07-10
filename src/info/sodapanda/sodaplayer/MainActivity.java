@@ -60,7 +60,7 @@ public class MainActivity extends Activity {
 		button_stop = (Button) findViewById(R.id.button_stop);
 		
 		final ArrayList<String> rtmplist = new ArrayList<String>();
-		rtmplist.add("rtmp://115.231.101.160/live1/test");
+		rtmplist.add("rtmp://115.231.101.160/live1/7777");
 		
 		final ArrayList<String> rtmplist2 = new ArrayList<String>();
 		rtmplist2.add("rtmp://115.231.101.160/live1/testnms");
@@ -69,7 +69,10 @@ public class MainActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				String rtmpurl = filename.getText().toString();
-				rtmplist.add(0, rtmpurl);
+				if(rtmpurl != null && !(rtmpurl.equals(""))){
+					rtmplist.add(0, rtmpurl);
+				}
+				
 				player_surface.startPlayer(rtmplist);
 			}
 		});
