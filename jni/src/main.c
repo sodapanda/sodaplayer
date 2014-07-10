@@ -202,9 +202,7 @@ void *video_thread(void *minstance){
 
 		if(msg.data ==NULL){
 			LOGE("视频线程超时退出");
-			if(!instance->stop){
-				instance->timeout_flag = 1;
-			}
+
 			break;
 		}
 
@@ -297,9 +295,6 @@ void *audio_thread(void *minstance){
 
 		if(msg.data ==NULL){
 			LOGE("音频线程超时退出");
-			if(!instance->stop){
-				instance->timeout_flag = 1;
-			}
 			break;
 		}
 
@@ -460,11 +455,9 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 
 	if(videoStream==-1){
 		LOGE("无法找到视频流");
-		return -1;
 	}
 	if(audioStream==-1 || instance->vs->sample_rate_src<=0){
 		LOGE("sample_rate is wrong");
-		return -1;
 	}
 
 	//打开音频解码器
