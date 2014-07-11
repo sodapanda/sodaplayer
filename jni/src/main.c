@@ -336,6 +336,7 @@ void *audio_thread(void *minstance){
 			swr_convert(instance->vs->swr_ctx,dst_data,(instance->vs->audio_decode_frame)->nb_samples,(const uint8_t **)&(instance->vs->audio_decode_frame->data[0]),(instance->vs->audio_decode_frame)->nb_samples);
 			if(len<0){
 				LOGE("audio decode return wrong");
+				av_free(dst_data[0]);
 				break;
 			}
 			pavpacket.size -= len;
@@ -347,8 +348,8 @@ void *audio_thread(void *minstance){
 				(*audioEnv)->ReleaseByteArrayElements(audioEnv, instance->global_aarray, bytes, 0);
 				(*audioEnv)->CallVoidMethod(audioEnv,instance->gJavaobj,play,instance->global_aarray,dst_linesize);
 			}
+			av_free(dst_data[0]);
 		}
-		av_free(dst_data[0]);
 		av_free_packet(packet_p);
 		av_free(msg.data);
 	}
@@ -466,7 +467,6 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	//但是采样率不对就算错误了
 	if(audioStream==-1 || instance->vs->sample_rate_src<=0){
 		LOGE("sample_rate is wrong");
-		return -1;
 	}
 
 	//打开音频解码器
