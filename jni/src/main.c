@@ -34,7 +34,8 @@ typedef struct VideoState{//解码过程中的数据结构
 	int sample_rate_src;
 	int sample_fmt;
 	int sample_layout;
-	int64_t start_time;
+	int64_t video_start_time;
+	int64_t audio_start_time;
 	double video_time_base;
 	double audio_time_base;
 }VideoState;
@@ -186,6 +187,7 @@ void *video_thread(void *minstance){
 	time.tv_sec=10;//网络不好最多等10秒
 	time.tv_nsec=0;
 	struct threadmsg msg;
+	int packet_count = 0;
 
 	while(1){
 		if(instance->stop){
@@ -205,19 +207,19 @@ void *video_thread(void *minstance){
 
 			break;
 		}
-
 		AVPacket *packet_p = msg.data;
 		AVPacket pavpacket = *packet_p;
-		int64_t packet_dts = packet_p->dts;
 
-		if(packet_dts<=0){//dts值无效
-			continue;
+		packet_count ++;
+
+		if(packet_count == 1){//拿到第一个视频包
+			instance->vs->video_start_time = av_gettime();
+			LOGE("视频开始时间 %lld\n",instance->vs->video_start_time);
 		}
 
-		if(pavpacket.stream_index!=instance->vs->videoStream){
-			continue;
-		}
 		if(instance->disable_video){
+			av_free_packet(packet_p);
+			av_free(msg.data);
 			continue;
 		}
 
@@ -225,16 +227,15 @@ void *video_thread(void *minstance){
 		int64_t pkt_pts = pavpacket.pts;
 		double show_time = pkt_pts * (instance->vs->video_time_base);
 		int64_t show_time_micro = show_time * 1000000;
-		int64_t played_time = av_gettime() - instance->vs->start_time;
+		int64_t played_time = av_gettime() - instance->vs->video_start_time;
 		int64_t delta_time = show_time_micro - played_time;
+//		LOGE("播放时间 %lld,PTS时间: %lld,差距时间: %lld\n",played_time,show_time_micro,delta_time);
 		if(delta_time< -(0.2 * 1000000)){
-			LOGE("视频跳帧出现\n");
-			continue;
 			av_free_packet(packet_p);
 			av_free(msg.data);
-		}
-
-		if(delta_time>0){
+			LOGE("视频跳帧\n");
+			continue;
+		}else if(delta_time>0){
 			av_usleep(delta_time);
 		}
 
@@ -279,6 +280,7 @@ void *audio_thread(void *minstance){
 	time.tv_sec=10;//网络不好最多等10秒
 	time.tv_nsec=0;
 	struct threadmsg msg;
+	int packet_count = 0;
 
 	while(1){
 		if(instance->stop){
@@ -298,25 +300,29 @@ void *audio_thread(void *minstance){
 			break;
 		}
 
+		packet_count++;
+		if(packet_count == 1){//拿到第一个音频包
+			instance->vs->audio_start_time = av_gettime();
+			LOGE("音频开始时间 %lld\n",instance->vs->audio_start_time);
+		}
+
 		AVPacket *packet_p = msg.data;
 		pavpacket = *packet_p;
 		uint8_t ** dst_data;
-
-		if(pavpacket.stream_index!=instance->vs->audioStream){
-			continue;
-		}
 
 		//延时同步
 		int64_t pkt_pts = pavpacket.pts;
 		double show_time = pkt_pts * (instance->vs->audio_time_base);
 		int64_t show_time_micro = show_time * 1000000;
-		int64_t played_time = av_gettime() - instance->vs->start_time;
+		int64_t played_time = av_gettime() - instance->vs->audio_start_time;
 		int64_t delta_time = show_time_micro - played_time;
 		if(delta_time< -(0.2 * 1000000)){
-			LOGE("音频跳帧出现\n");
-			continue;
 			av_free_packet(packet_p);
 			av_free(msg.data);
+			LOGE("声音跳帧\n");
+			continue;
+		}else if(delta_time>0){
+			av_usleep(delta_time);
 		}
 
 		int len =0;
@@ -453,11 +459,14 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 		}
 	}
 
+	//找不到音频流不算错误
 	if(videoStream==-1){
 		LOGE("无法找到视频流");
 	}
+	//但是采样率不对就算错误了
 	if(audioStream==-1 || instance->vs->sample_rate_src<=0){
 		LOGE("sample_rate is wrong");
+		return -1;
 	}
 
 	//打开音频解码器
@@ -533,8 +542,6 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	instance->vs->audio_decode_frame=audio_frame;
 	instance->vs->swr_ctx=swr_ctx;
 
-	//成功打开视频文件之后开始计时
-	instance->vs->start_time = av_gettime();
 	//视频线程
 	pthread_t video_tid;
 	if(videoStream!=-1){
