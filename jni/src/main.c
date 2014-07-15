@@ -332,10 +332,8 @@ void *audio_thread(void *minstance){
 
 			len = avcodec_decode_audio4(instance->vs->aCodecCtx,instance->vs->audio_decode_frame,&got_frame,&pavpacket);
 			if(len<0){
-				LOGE("audio decode return wrong");
-				av_free_packet(packet_p);
-				av_free(msg.data);			
-				continue;
+				LOGE("audio decode return wrong");								
+				break;
 			}
 			//音频转化
 			av_samples_alloc_array_and_samples(&dst_data,&dst_linesize,1,(instance->vs->audio_decode_frame)->nb_samples,AV_SAMPLE_FMT_S16,0);
@@ -408,7 +406,7 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	av_register_all();	//注册解码器等操作
 	avformat_network_init();	//初始化网络
 	pFormatCtx= avformat_alloc_context();
-	pFormatCtx->max_analyze_duration=10000;//最长分析时间10000微秒
+	pFormatCtx->max_analyze_duration=1000000;//最长分析时间10000微秒
 	pFormatCtx->interrupt_callback.callback = call_back;//设置中断回调函数
 	pFormatCtx->interrupt_callback.opaque = instance;//中断回调函数的参数
 
@@ -453,22 +451,20 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 			instance->vs->sample_rate_src = pFormatCtx->streams[i]->codec->sample_rate;
 			instance->vs->sample_fmt = pFormatCtx->streams[i]->codec->sample_fmt;
 			instance->vs->sample_layout = pFormatCtx->streams[i]->codec->channel_layout;
-			if(instance->vs->sample_rate_src > 0){
-				jbyteArray aarray = (jbyteArray)((*env)->CallObjectMethod(env,obj,instance->initAdudioTrack,instance->vs->sample_rate_src));
-				instance->global_aarray = (*env)->NewGlobalRef(env,aarray);
-				LOGE("initAdudioTrack返回\n");
+			if(instance->vs->sample_rate_src <= 0){
+				instance->vs->sample_rate_src = 44100;
+				LOGE("Audio Sample Rate is wrong");
+				return -1;
 			}
-
+			jbyteArray aarray = (jbyteArray)((*env)->CallObjectMethod(env,obj,instance->initAdudioTrack,instance->vs->sample_rate_src));
+			instance->global_aarray = (*env)->NewGlobalRef(env,aarray);
+			LOGE("initAdudioTrack返回\n");
 		}
 	}
 
 	//找不到音频流不算错误
 	if(videoStream==-1){
 		LOGE("无法找到视频流");
-	}
-	//但是采样率不对就算错误了
-	if(audioStream==-1 || instance->vs->sample_rate_src<=0){
-		LOGE("sample_rate is wrong");
 	}
 
 	//打开音频解码器
@@ -477,7 +473,7 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 		aCodec= avcodec_find_decoder(aCodecCtx->codec_id);
 
 		if(avcodec_open2(aCodecCtx,aCodec,&audioOptionsDict)<0){
-			LOGE("无法打开解码器");
+			LOGE("无法打开Audio解码器");
 			return -1;
 		}
 	}
