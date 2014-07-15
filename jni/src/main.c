@@ -103,6 +103,10 @@ jobject createBitmap(JNIEnv *pEnv, int pWidth, int pHeight) {
 	return (*pEnv)->CallStaticObjectMethod(pEnv, javaBitmapClass, mid, pWidth, pHeight, javaBitmapConfig);
 }
 
+void setAndroidWindowPix(int width,int height,playInstance *instance){
+	ANativeWindow_setBuffersGeometry(instance->window,width,height,WINDOW_FORMAT_RGBA_8888);
+}
+
 //当Android系统中对应播放窗口的Surfaceview创建的时候，在native层得到这个surface的引用地址
 int Java_info_sodapanda_sodaplayer_FFmpegVideoView_setupsurface(JNIEnv* env,jobject thiz,jobject pSurface,int pwidth,int pheight,jlong ptr){
 	playInstance *instance = (playInstance *)ptr;
@@ -112,10 +116,6 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_setupsurface(JNIEnv* env,jobj
 	}
 	instance->disable_video=0;
 	return 0;
-}
-
-void setAndroidWindowPix(int width,int height,playInstance *instance){
-	ANativeWindow_setBuffersGeometry(instance->window,width,height,WINDOW_FORMAT_RGBA_8888);
 }
 
 long Java_info_sodapanda_sodaplayer_FFmpegVideoView_getPlayInstance(JNIEnv* env,jobject thiz){
@@ -231,10 +231,7 @@ void *video_thread(void *minstance){
 		int64_t delta_time = show_time_micro - played_time;
 //		LOGE("播放时间 %lld,PTS时间: %lld,差距时间: %lld\n",played_time,show_time_micro,delta_time);
 		if(delta_time< -(0.2 * 1000000)){
-			av_free_packet(packet_p);
-			av_free(msg.data);
 			LOGE("视频跳帧\n");
-			continue;
 		}else if(delta_time>0){
 			av_usleep(delta_time);
 		}
@@ -452,19 +449,18 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 			instance->vs->sample_fmt = pFormatCtx->streams[i]->codec->sample_fmt;
 			instance->vs->sample_layout = pFormatCtx->streams[i]->codec->channel_layout;
 			if(instance->vs->sample_rate_src <= 0){
-				instance->vs->sample_rate_src = 44100;
 				LOGE("Audio Sample Rate is wrong");
-				return -1;
+			}else{
+				jbyteArray aarray = (jbyteArray)((*env)->CallObjectMethod(env,obj,instance->initAdudioTrack,instance->vs->sample_rate_src));
+				instance->global_aarray = (*env)->NewGlobalRef(env,aarray);
+				LOGE("initAdudioTrack返回\n");
 			}
-			jbyteArray aarray = (jbyteArray)((*env)->CallObjectMethod(env,obj,instance->initAdudioTrack,instance->vs->sample_rate_src));
-			instance->global_aarray = (*env)->NewGlobalRef(env,aarray);
-			LOGE("initAdudioTrack返回\n");
 		}
 	}
 
-	//找不到音频流不算错误
 	if(videoStream==-1){
 		LOGE("无法找到视频流");
+		return -1;
 	}
 
 	//打开音频解码器
