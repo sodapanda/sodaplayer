@@ -34,10 +34,10 @@ public class FFmpegVideoView extends SurfaceView implements SurfaceHolder.Callba
 	}
 
 	
-	public FFmpegVideoView(Context context,PlayCallback playCallback) {
+	public FFmpegVideoView(Context context,PlayCallback playCallback,int width,int height) {
 		super(context);
         this.playCallback = playCallback;
-		instance = getPlayInstance(320,240);
+		instance = getPlayInstance(width,height);
 		Log.i("soda", "得到一个播放事例 "+instance);
 		
 		this.activity = (Activity) context;
