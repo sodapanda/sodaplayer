@@ -25,7 +25,6 @@ typedef struct VideoState{//解码过程中的数据结构
 	AVFrame *pFrame;
 	struct SwsContext *sws_ctx;
 	AVFrame *RGBAFrame;
-	ANativeWindow_Buffer windowBuffer;
 	void* buffer;
 	int audioStream;
 	AVCodecContext *aCodecCtx;
@@ -42,8 +41,8 @@ typedef struct VideoState{//解码过程中的数据结构
 
 typedef struct playInstance{
 	ANativeWindow* window;//对应surfaceview的native层窗口对象
-	int width;
-	int height;
+	int display_width;
+	int display_height;
 	int stop;
 	int timeout_flag;
 	int disable_video;
@@ -111,15 +110,17 @@ void setAndroidWindowPix(int width,int height,playInstance *instance){
 int Java_info_sodapanda_sodaplayer_FFmpegVideoView_setupsurface(JNIEnv* env,jobject thiz,jobject pSurface,int pwidth,int pheight,jlong ptr){
 	playInstance *instance = (playInstance *)ptr;
 	instance->window = ANativeWindow_fromSurface(env,pSurface);
-	if(instance->width !=0){
-		setAndroidWindowPix(instance->width,instance->height,instance);
+	if(instance->display_width !=0){
+		setAndroidWindowPix(instance->display_width,instance->display_height,instance);
 	}
 	instance->disable_video=0;
 	return 0;
 }
 
-long Java_info_sodapanda_sodaplayer_FFmpegVideoView_getPlayInstance(JNIEnv* env,jobject thiz){
+long Java_info_sodapanda_sodaplayer_FFmpegVideoView_getPlayInstance(JNIEnv* env,jobject thiz,int width,int height){
 	playInstance *instance = malloc(sizeof(playInstance));
+	instance->display_width = width;
+	instance->display_height = height;
 	return (long)instance;
 }
 
@@ -222,6 +223,7 @@ void *video_thread(void *minstance){
 			av_free(msg.data);
 			continue;
 		}
+		ANativeWindow_Buffer windowBuffer;
 
 		//延时同步
 		int64_t pkt_pts = pavpacket.pts;
@@ -249,11 +251,11 @@ void *video_thread(void *minstance){
 					instance->vs->RGBAFrame->data,
 					instance->vs->RGBAFrame->linesize
 				);
-			if (!(instance->disable_video) && ANativeWindow_lock(instance->window, &(instance->vs->windowBuffer), NULL) < 0) {
+			if (!(instance->disable_video) && ANativeWindow_lock(instance->window, &windowBuffer, NULL) < 0) {
 				LOGE("cannot lock window");
 				continue;
 			}else if(!instance->disable_video){
-				memcpy((instance->vs->windowBuffer).bits, instance->vs->buffer,  instance->width * instance->height * 4);//将解码出来的数据复制到surfaceview对应的内存区域
+				memcpy(windowBuffer.bits, instance->vs->buffer,  instance->display_width * instance->display_height * 4);//将解码出来的数据复制到surfaceview对应的内存区域
 				ANativeWindow_unlockAndPost(instance->window);//释放对surface的锁，并且更新对应surface数据进行显示
 			}
 		}
@@ -484,10 +486,11 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 		}
 	}
 
-	instance->width = pCodecCtx->width;
-	instance->height = pCodecCtx->height;
-
-	setAndroidWindowPix(pCodecCtx->width,pCodecCtx->height,instance);
+	if(instance->display_height == 0 ){
+		instance->display_width = pCodecCtx->width;
+		instance->display_height = pCodecCtx->height;
+		setAndroidWindowPix(pCodecCtx->width,pCodecCtx->height,instance);
+	}
 
 	pFrame = avcodec_alloc_frame();
 
@@ -496,8 +499,8 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 		pCodecCtx->width,
 		pCodecCtx->height,
 		pCodecCtx->pix_fmt,
-		pCodecCtx->width,
-		pCodecCtx->height,
+		instance->display_width,
+		instance->display_height,
 		AV_PIX_FMT_RGBA,
 		SWS_BILINEAR,
 		NULL,
@@ -506,12 +509,11 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	);
 
 	//创建bitmap
-	bitmap = createBitmap(env, pCodecCtx->width, pCodecCtx->height);
+	bitmap = createBitmap(env, instance->display_width, instance->display_height);
 	AndroidBitmap_lockPixels(env, bitmap, &buffer);
 	AVFrame *RGBAFrame;
 	RGBAFrame = avcodec_alloc_frame();
-	avpicture_fill((AVPicture *) RGBAFrame, buffer, AV_PIX_FMT_RGBA, pCodecCtx->width, pCodecCtx->height);
-	ANativeWindow_Buffer windowBuffer;
+	avpicture_fill((AVPicture *) RGBAFrame, buffer, AV_PIX_FMT_RGBA, instance->display_width, instance->display_height);
 
 	//原始音频转换
 	struct SwrContext *swr_ctx;
@@ -529,7 +531,6 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 	instance->vs->pCodecCtx=pCodecCtx;
 	instance->vs->pFrame=pFrame;
 	instance->vs->sws_ctx=sws_ctx;
-	instance->vs->windowBuffer=windowBuffer;
 	instance->vs->videoStream=videoStream;
 	instance->vs->aCodecCtx=aCodecCtx;
 	instance->vs->audioStream=audioStream;
