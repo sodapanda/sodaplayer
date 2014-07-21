@@ -33,3 +33,8 @@ obj/
 
 #idea
 SodaPlayer.iml
+
+#simple
+SodaplayerSample/bin
+SodaplayerSample/gen
+
