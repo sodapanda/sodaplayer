@@ -452,6 +452,7 @@ int Java_info_sodapanda_sodaplayer_FFmpegVideoView_openfile(JNIEnv* env,jobject 
 			instance->vs->sample_layout = pFormatCtx->streams[i]->codec->channel_layout;
 			if(instance->vs->sample_rate_src <= 0){
 				LOGE("Audio Sample Rate is wrong");
+				return -1;
 			}else{
 				jbyteArray aarray = (jbyteArray)((*env)->CallObjectMethod(env,obj,instance->initAdudioTrack,instance->vs->sample_rate_src));
 				instance->global_aarray = (*env)->NewGlobalRef(env,aarray);
