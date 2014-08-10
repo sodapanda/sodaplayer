@@ -295,8 +295,8 @@ void *audio_thread(void *minstance){
 		}
 
 		if(msg.data ==NULL){
-			LOGE("音频线程超时退出");
-			break;
+			LOGE("音频线程空循环\n");
+			continue;
 		}
 
 		packet_count++;
